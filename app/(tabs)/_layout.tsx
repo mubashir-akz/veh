@@ -36,7 +36,7 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
 
   return (
-    <View style={[styles.tabBarOuter, { paddingBottom: insets.bottom }]}>
+    <View style={[styles.tabBarOuter, { paddingBottom: insets.bottom }]}> 
       <View style={styles.tabBarInner}>
         {state.routes.map((route, index) => {
           const focused = state.index === index;
@@ -61,12 +61,13 @@ function CustomTabBar({ state, navigation }: BottomTabBarProps) {
               key={route.key}
               onPress={onPress}
               style={styles.buttonPressable}>
-              <View
-                style={[
-                  styles.buttonContainer,
-                  focused && !isAdd && styles.buttonContainerActive,
-                  isAdd && styles.addButtonContainer,
-                ]}>
+              <View style={[styles.buttonContainer, isAdd && styles.addButtonContainer]}>
+                {!isAdd ? (
+                  <View
+                    pointerEvents="none"
+                    style={[styles.selectionBg, focused && styles.selectionBgActive]}
+                  />
+                ) : null}
                 <Icon
                   size={24}
                   strokeWidth={2}
@@ -120,6 +121,7 @@ const styles = StyleSheet.create({
     width: "100%",
     height: 76,
     borderRadius: 24,
+    overflow: "hidden",
     borderWidth: 1,
     borderColor: TAB_BORDER,
     backgroundColor: TAB_BG,
@@ -130,19 +132,30 @@ const styles = StyleSheet.create({
     flex: 1,
     marginHorizontal: 3,
     borderRadius: 16,
+    overflow: "hidden",
   },
   buttonContainer: {
     flex: 1,
+    position: "relative",
     borderRadius: 16,
+    overflow: "hidden",
     alignItems: "center",
     justifyContent: "center",
     gap: 3,
   },
-  buttonContainerActive: {
+  selectionBg: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 16,
     backgroundColor: ACTIVE_TAB_BG,
+    opacity: 0,
+  },
+  selectionBgActive: {
+    opacity: 1,
   },
   addButtonContainer: {
     backgroundColor: ADD_TAB_BG,
+    borderRadius: 16,
+    overflow: "hidden",
     borderWidth: 1,
     borderColor: ADD_TAB_BORDER,
   },
