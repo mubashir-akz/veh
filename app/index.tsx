@@ -1,9 +1,10 @@
 import { Bell, Car, TrendingUp } from "lucide-react-native";
-import { SafeAreaView, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Home() {
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
 
       {/* Header */}
       <Text style={styles.title}>Fleet Flow</Text>
