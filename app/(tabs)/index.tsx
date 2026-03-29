@@ -1,4 +1,4 @@
-import { Bell, Car, TrendingUp } from "lucide-react-native";
+import { Bell, Car } from "lucide-react-native";
 import { type ReactNode } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -15,13 +15,28 @@ export default function DashboardScreen() {
       </View>
 
       <View style={styles.bigCard}>
-        <View>
+        <View style={styles.spendingTable}>
           <Text style={styles.label}>Monthly Spending</Text>
-          <Text style={styles.amount}>$0.00</Text>
-          <Text style={styles.small}>Fuel $0   Service $0</Text>
-        </View>
-        <View style={styles.iconBox}>
-          <TrendingUp color="#22C55E" />
+
+          <View style={styles.spendingRow}>
+            <Text style={styles.spendingLabel}>Fuel</Text>
+            <Text style={styles.spendingValue}>$0.00</Text>
+          </View>
+
+          <View style={styles.spendingRow}>
+            <Text style={styles.spendingLabel}>Service</Text>
+            <Text style={styles.spendingValue}>$0.00</Text>
+          </View>
+
+          <View style={styles.spendingRow}>
+            <Text style={styles.spendingLabel}>Other</Text>
+            <Text style={styles.spendingValue}>$0.00</Text>
+          </View>
+
+          <View style={styles.totalRow}>
+            <Text style={styles.totalLabel}>Total</Text>
+            <Text style={styles.totalValue}>$0.00</Text>
+          </View>
         </View>
       </View>
 
@@ -99,26 +114,48 @@ const styles = StyleSheet.create({
     backgroundColor: "#1E293B",
     borderRadius: 16,
     padding: 20,
-    flexDirection: "row",
-    justifyContent: "space-between",
+  },
+  spendingTable: {
+    width: "100%",
   },
   label: {
-    color: "#94A3B8",
+    color: "#FDE68A",
+    fontSize: 18,
+    fontWeight: "700",
+    marginBottom: 10,
   },
-  amount: {
-    color: "#fff",
-    fontSize: 28,
+  spendingRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(148, 163, 184, 0.3)",
+  },
+  spendingLabel: {
+    color: "#E2E8F0",
+    fontSize: 16,
+  },
+  spendingValue: {
+    color: "#FECACA",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  totalRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingTop: 16,
+  },
+  totalLabel: {
+    color: "#F8FAFC",
+    fontSize: 18,
     fontWeight: "700",
   },
-  small: {
-    color: "#94A3B8",
-    marginTop: 5,
-  },
-  iconBox: {
-    backgroundColor: "#14532D",
-    padding: 12,
-    borderRadius: 12,
-    justifyContent: "center",
+  totalValue: {
+    color: "#F8FAFC",
+    fontSize: 18,
+    fontWeight: "700",
   },
   emptyCard: {
     marginTop: 20,
