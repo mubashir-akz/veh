@@ -39,7 +39,7 @@ export default function AddScreen() {
             subtitle: "Log a fuel entry",
             icon: Fuel,
             iconBg: "#2F7AF8",
-            onPress: () => showComingSoon("Add Fuel"),
+            onPress: () => router.push("/fuel-log"),
         },
         {
             key: "service",
@@ -47,7 +47,7 @@ export default function AddScreen() {
             subtitle: "Record a service",
             icon: Wrench,
             iconBg: "#11C767",
-            onPress: () => showComingSoon("Add Service"),
+            onPress: () => router.push("/service-history"),
         },
         {
             key: "expense",
@@ -55,7 +55,7 @@ export default function AddScreen() {
             subtitle: "Track an expense",
             icon: HandCoins,
             iconBg: "#FF7A00",
-            onPress: () => showComingSoon("Add Expense"),
+            onPress: () => router.push("/expenses"),
         },
         {
             key: "vehicle",

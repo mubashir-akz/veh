@@ -52,7 +52,7 @@ export default function VehiclesScreen() {
                     </View>
                 }
                 renderItem={({ item }) => (
-                    <View style={styles.vehicleCard}>
+                    <Pressable style={styles.vehicleCard} onPress={() => router.push(`/vehicle/${item.id}`)}>
                         <View style={styles.topRow}>
                             <View style={styles.vehicleIconWrap}>
                                 <CarFront color="#E2E8F0" size={26} />
@@ -102,7 +102,7 @@ export default function VehiclesScreen() {
                                 <Text style={styles.statValue}>$0</Text>
                             </View>
                         </View>
-                    </View>
+                    </Pressable>
                 )}
             />
         </TabScreen>
