@@ -7,17 +7,17 @@ import {
     Wrench,
 } from "lucide-react-native";
 import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { TabScreen } from "../../components/ui/tab-screen";
+import { theme } from "../../constants/theme";
 import { useVehicleStore } from "../../context/vehicle-context";
 import { useTabBarSpacing } from "../../hooks/use-tab-bar-spacing";
-import { theme } from "../../constants/theme";
 
 export default function VehiclesScreen() {
     const { vehicles } = useVehicleStore();
     const tabBarSpacing = useTabBarSpacing(0);
 
     return (
-        <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
+        <TabScreen style={styles.container}>
             <FlatList
                 style={styles.list}
                 data={vehicles}
@@ -105,7 +105,7 @@ export default function VehiclesScreen() {
                     </View>
                 )}
             />
-        </SafeAreaView>
+        </TabScreen>
     );
 }
 
@@ -113,68 +113,66 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: theme.background,
-        padding: 20,
     },
     header: {
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
-        marginBottom: 0,
+        marginBottom: 4,
     },
     title: {
-        color: "#fff",
-        fontSize: 42,
+        color: theme.textPrimary,
+        fontSize: 28,
         fontWeight: "700",
     },
     subtitle: {
-        color: "#94A3B8",
+        color: theme.textMuted,
         marginTop: 2,
-        fontSize: 16,
+        fontSize: 14,
     },
     addButton: {
-        backgroundColor: "#4F46E5",
+        backgroundColor: theme.primary,
         borderRadius: 16,
         paddingVertical: 10,
-        paddingHorizontal: 14,
+        paddingHorizontal: 16,
     },
     addButtonText: {
-        color: "#F8FAFC",
+        color: theme.primaryText,
         fontWeight: "700",
-        fontSize: 16,
+        fontSize: 14,
     },
     emptyCard: {
-        marginTop: 0,
+        marginTop: 4,
         backgroundColor: theme.card,
-        borderRadius: 20,
-        padding: 26,
-        borderWidth: 1,
-        borderColor: theme.borderSoft,
+        borderRadius: 16,
+        padding: 30,
         alignItems: "center",
     },
     emptyTitle: {
         marginTop: 14,
-        color: "#F8FAFC",
+        color: theme.textPrimary,
         fontSize: 18,
         fontWeight: "700",
     },
     emptyText: {
-        marginTop: 10,
-        color: "#CBD5E1",
-        fontSize: 17,
+        marginTop: 8,
+        color: theme.textMuted,
+        fontSize: 15,
     },
     emptyAction: {
         marginTop: 18,
-        backgroundColor: "#4F46E5",
-        borderRadius: 14,
+        backgroundColor: theme.primary,
+        borderRadius: 16,
         paddingHorizontal: 22,
         paddingVertical: 12,
     },
     emptyActionText: {
-        color: "#F8FAFC",
-        fontSize: 16,
+        color: theme.primaryText,
+        fontSize: 15,
         fontWeight: "700",
     },
     listContent: {
+        padding: 20,
         gap: 14,
     },
     list: {
@@ -182,39 +180,38 @@ const styles = StyleSheet.create({
     },
     vehicleCard: {
         backgroundColor: theme.card,
-        borderRadius: 18,
-        padding: 16,
-        borderWidth: 1,
-        borderColor: theme.borderSoft,
+        borderRadius: 16,
+        padding: 18,
     },
     topRow: {
         flexDirection: "row",
+        alignItems: "center",
     },
     vehicleIconWrap: {
-        width: 82,
-        height: 82,
-        borderRadius: 18,
+        width: 64,
+        height: 64,
+        borderRadius: 16,
         alignItems: "center",
         justifyContent: "center",
         backgroundColor: theme.surface,
     },
     vehicleInfo: {
         flex: 1,
-        marginLeft: 12,
+        marginLeft: 14,
     },
     vehicleName: {
-        color: "#F8FAFC",
-        fontSize: 22,
+        color: theme.textPrimary,
+        fontSize: 20,
         fontWeight: "700",
     },
     vehicleMeta: {
-        color: "#D1D5DB",
-        marginTop: 5,
-        fontSize: 16,
-        fontWeight: "600",
+        color: theme.textMuted,
+        marginTop: 4,
+        fontSize: 14,
+        fontWeight: "500",
     },
     plate: {
-        color: "#9CA3AF",
+        color: theme.textLabel,
         marginTop: 4,
         fontSize: 14,
     },
@@ -227,20 +224,25 @@ const styles = StyleSheet.create({
         marginTop: 12,
         flexDirection: "row",
         justifyContent: "space-between",
+        gap: 12,
     },
     infoItem: {
+        flex: 1,
         flexDirection: "row",
         alignItems: "center",
         gap: 8,
-        minWidth: 130,
+        paddingVertical: 10,
+        paddingHorizontal: 12,
+        borderRadius: 12,
+        backgroundColor: theme.surface,
     },
     infoLabel: {
-        color: "#9CA3AF",
-        fontSize: 13,
+        color: theme.textMuted,
+        fontSize: 12,
     },
     infoValue: {
-        color: "#F8FAFC",
-        fontSize: 18,
+        color: theme.textPrimary,
+        fontSize: 15,
         fontWeight: "700",
     },
     statsRow: {
@@ -252,17 +254,19 @@ const styles = StyleSheet.create({
         flex: 1,
         borderRadius: 12,
         paddingVertical: 12,
+        paddingHorizontal: 8,
         alignItems: "center",
         backgroundColor: theme.surface,
     },
     statLabel: {
-        color: "#CBD5E1",
+        color: theme.textMuted,
         fontSize: 12,
         marginTop: 6,
+        textAlign: "center",
     },
     statValue: {
-        color: "#F8FAFC",
-        fontSize: 32,
+        color: theme.textPrimary,
+        fontSize: 24,
         fontWeight: "700",
         marginTop: 2,
     },

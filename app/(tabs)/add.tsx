@@ -12,10 +12,10 @@ import {
     TextInput,
     View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { useTabBarSpacing } from "../../hooks/use-tab-bar-spacing";
-import { useVehicleStore } from "../../context/vehicle-context";
+import { TabScreen } from "../../components/ui/tab-screen";
 import { theme } from "../../constants/theme";
+import { useVehicleStore } from "../../context/vehicle-context";
+import { useTabBarSpacing } from "../../hooks/use-tab-bar-spacing";
 
 export default function AddScreen() {
     const { addVehicle } = useVehicleStore();
@@ -91,7 +91,7 @@ export default function AddScreen() {
 
     return (
         <>
-            <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
+            <TabScreen style={styles.container}>
                 <KeyboardAvoidingView
                     style={styles.container}
                     behavior={Platform.OS === "ios" ? "padding" : undefined}>
@@ -109,6 +109,9 @@ export default function AddScreen() {
                         </View>
 
                         <View style={styles.card}>
+                            <Text style={styles.cardTitle}>Vehicle Details</Text>
+                            <Text style={styles.cardSubtitle}>Use the same clean structure as the dashboard cards.</Text>
+
                             <Text style={styles.label}>Vehicle Name *</Text>
                             <TextInput
                                 value={name}
@@ -148,7 +151,7 @@ export default function AddScreen() {
                                         value={year}
                                         onChangeText={setYear}
                                         placeholder="2026"
-                                    placeholderTextColor={theme.placeholder}
+                                        placeholderTextColor={theme.placeholder}
                                         keyboardType="number-pad"
                                         style={styles.input}
                                     />
@@ -159,7 +162,7 @@ export default function AddScreen() {
                                         value={color}
                                         onChangeText={setColor}
                                         placeholder="Blue"
-                                    placeholderTextColor={theme.placeholder}
+                                        placeholderTextColor={theme.placeholder}
                                         style={styles.input}
                                     />
                                 </View>
@@ -192,7 +195,7 @@ export default function AddScreen() {
                         </Pressable>
                     </ScrollView>
                 </KeyboardAvoidingView>
-            </SafeAreaView>
+            </TabScreen>
 
             <Modal
                 visible={messageVisible}
@@ -254,60 +257,63 @@ const styles = StyleSheet.create({
         backgroundColor: theme.background,
     },
     content: {
-        paddingHorizontal: 18,
-        paddingTop: 10,
+        paddingHorizontal: 20,
+        paddingTop: 20,
     },
     pageHeader: {
         flexDirection: "row",
         alignItems: "center",
         gap: 12,
-        marginBottom: 18,
+        marginBottom: 20,
     },
     backButton: {
-        width: 38,
-        height: 38,
+        width: 44,
+        height: 44,
         borderRadius: 12,
         alignItems: "center",
         justifyContent: "center",
         backgroundColor: theme.surface,
-        borderWidth: 1,
-        borderColor: theme.borderRow,
     },
     title: {
         color: theme.textPrimary,
-        fontSize: 38,
+        fontSize: 28,
         fontWeight: "700",
-        lineHeight: 40,
     },
     subtitle: {
         color: theme.textMuted,
         marginTop: 2,
-        fontSize: 16,
-        fontWeight: "500",
+        fontSize: 14,
     },
     card: {
         backgroundColor: theme.card,
         borderRadius: 16,
-        padding: 14,
-        borderWidth: 1,
-        borderColor: theme.borderSoft,
+        padding: 20,
+    },
+    cardTitle: {
+        color: theme.textPrimary,
+        fontSize: 18,
+        fontWeight: "700",
+    },
+    cardSubtitle: {
+        color: theme.textMuted,
+        fontSize: 14,
+        marginTop: 4,
+        marginBottom: 4,
     },
     label: {
         color: theme.textLabel,
         marginBottom: 8,
-        marginTop: 12,
-        fontSize: 16,
+        marginTop: 14,
+        fontSize: 14,
         fontWeight: "600",
     },
     input: {
-        borderWidth: 1,
-        borderColor: theme.inputBorder,
         borderRadius: 12,
         paddingHorizontal: 14,
         paddingVertical: 12,
         color: theme.textOnDark,
-        fontSize: 17,
-        backgroundColor: theme.inputBackground,
+        fontSize: 16,
+        backgroundColor: theme.surface,
     },
     row: {
         flexDirection: "row",
@@ -318,19 +324,17 @@ const styles = StyleSheet.create({
     },
     saveButton: {
         marginTop: 16,
-        height: 56,
-        borderRadius: 14,
+        height: 54,
+        borderRadius: 16,
         alignItems: "center",
         justifyContent: "center",
         flexDirection: "row",
         gap: 8,
         backgroundColor: theme.primary,
-        borderWidth: 1,
-        borderColor: theme.primary,
     },
     saveButtonText: {
         color: theme.primaryText,
-        fontSize: 17,
+        fontSize: 16,
         fontWeight: "700",
     },
     modalOverlay: {
@@ -342,11 +346,9 @@ const styles = StyleSheet.create({
     },
     modalCard: {
         width: "100%",
-        borderRadius: 18,
+        borderRadius: 16,
         backgroundColor: theme.card,
-        borderWidth: 1,
-        borderColor: theme.borderSoft,
-        padding: 18,
+        padding: 20,
     },
     modalIconWrap: {
         width: 44,
@@ -399,7 +401,7 @@ const styles = StyleSheet.create({
     },
     secondaryButton: {
         backgroundColor: "transparent",
-        borderColor: theme.borderSoft,
+        borderColor: theme.borderRow,
     },
     secondaryButtonText: {
         color: theme.textOnDark,
