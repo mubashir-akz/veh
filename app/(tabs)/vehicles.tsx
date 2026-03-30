@@ -7,94 +7,104 @@ import {
     Wrench,
 } from "lucide-react-native";
 import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useVehicleStore } from "../../context/vehicle-context";
-import { TabScreen } from "../../components/ui/tab-screen";
+import { useTabBarSpacing } from "../../hooks/use-tab-bar-spacing";
 
 export default function VehiclesScreen() {
     const { vehicles } = useVehicleStore();
+    const tabBarSpacing = useTabBarSpacing(0);
 
     return (
-        <TabScreen style={styles.container}>
-            <View style={styles.header}>
-                <View>
-                    <Text style={styles.title}>My Vehicles</Text>
-                    <Text style={styles.subtitle}>Manage your fleet</Text>
-                </View>
-                <Pressable style={styles.addButton} onPress={() => router.push("/(tabs)/add")}>
-                    <Text style={styles.addButtonText}>Add Vehicle</Text>
-                </Pressable>
-            </View>
+        <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
+            <FlatList
+                style={styles.list}
+                data={vehicles}
+                keyExtractor={(item) => item.id}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={[
+                    styles.listContent,
+                    {
+                        flexGrow: 1,
+                        paddingBottom: tabBarSpacing,
+                    },
+                ]}
+                ListHeaderComponent={
+                    <View style={styles.header}>
+                        <View>
+                            <Text style={styles.title}>My Vehicles</Text>
+                            <Text style={styles.subtitle}>Manage your fleet</Text>
+                        </View>
+                        <Pressable style={styles.addButton} onPress={() => router.push("/(tabs)/add")}>
+                            <Text style={styles.addButtonText}>Add Vehicle</Text>
+                        </Pressable>
+                    </View>
+                }
+                ListEmptyComponent={
+                    <View style={styles.emptyCard}>
+                        <CarFront color="#94A3B8" size={44} />
+                        <Text style={styles.emptyTitle}>No Vehicles Yet</Text>
+                        <Text style={styles.emptyText}>Start by adding your first vehicle</Text>
+                        <Pressable style={styles.emptyAction} onPress={() => router.push("/(tabs)/add")}>
+                            <Text style={styles.emptyActionText}>Add Your First Vehicle</Text>
+                        </Pressable>
+                    </View>
+                }
+                renderItem={({ item }) => (
+                    <View style={styles.vehicleCard}>
+                        <View style={styles.topRow}>
+                            <View style={styles.vehicleIconWrap}>
+                                <CarFront color="#E2E8F0" size={26} />
+                            </View>
+                            <View style={styles.vehicleInfo}>
+                                <Text style={styles.vehicleName}>{item.name}</Text>
+                                <Text style={styles.vehicleMeta}>{`${item.year} ${item.make} ${item.model}`}</Text>
+                                <Text style={styles.plate}>{item.plate}</Text>
+                            </View>
+                        </View>
 
-            {vehicles.length === 0 ? (
-                <View style={styles.emptyCard}>
-                    <CarFront color="#94A3B8" size={44} />
-                    <Text style={styles.emptyTitle}>No Vehicles Yet</Text>
-                    <Text style={styles.emptyText}>Start by adding your first vehicle</Text>
-                    <Pressable style={styles.emptyAction} onPress={() => router.push("/(tabs)/add")}>
-                        <Text style={styles.emptyActionText}>Add Your First Vehicle</Text>
-                    </Pressable>
-                </View>
-            ) : (
-                <FlatList
-                    data={vehicles}
-                    keyExtractor={(item) => item.id}
-                    contentContainerStyle={styles.listContent}
-                    renderItem={({ item }) => (
-                        <View style={styles.vehicleCard}>
-                            <View style={styles.topRow}>
-                                <View style={styles.vehicleIconWrap}>
-                                    <CarFront color="#E2E8F0" size={26} />
-                                </View>
-                                <View style={styles.vehicleInfo}>
-                                    <Text style={styles.vehicleName}>{item.name}</Text>
-                                    <Text style={styles.vehicleMeta}>{`${item.year} ${item.make} ${item.model}`}</Text>
-                                    <Text style={styles.plate}>{item.plate}</Text>
+                        <View style={styles.separator} />
+
+                        <View style={styles.infoRow}>
+                            <View style={styles.infoItem}>
+                                <Fuel color="#9CA3AF" size={16} />
+                                <View>
+                                    <Text style={styles.infoLabel}>Mileage</Text>
+                                    <Text style={styles.infoValue}>{`${item.mileage.toLocaleString()} km`}</Text>
                                 </View>
                             </View>
-
-                            <View style={styles.separator} />
-
-                            <View style={styles.infoRow}>
-                                <View style={styles.infoItem}>
-                                    <Fuel color="#9CA3AF" size={16} />
-                                    <View>
-                                        <Text style={styles.infoLabel}>Mileage</Text>
-                                        <Text style={styles.infoValue}>{`${item.mileage.toLocaleString()} km`}</Text>
-                                    </View>
-                                </View>
-                                <View style={styles.infoItem}>
-                                    <Droplet color="#9CA3AF" size={16} />
-                                    <View>
-                                        <Text style={styles.infoLabel}>Color</Text>
-                                        <Text style={styles.infoValue}>{item.color}</Text>
-                                    </View>
-                                </View>
-                            </View>
-
-                            <View style={styles.separator} />
-
-                            <View style={styles.statsRow}>
-                                <View style={styles.statBox}>
-                                    <Fuel color="#60A5FA" size={18} />
-                                    <Text style={styles.statLabel}>Fuel Logs</Text>
-                                    <Text style={styles.statValue}>0</Text>
-                                </View>
-                                <View style={styles.statBox}>
-                                    <Wrench color="#34D399" size={18} />
-                                    <Text style={styles.statLabel}>Services</Text>
-                                    <Text style={styles.statValue}>0</Text>
-                                </View>
-                                <View style={styles.statBox}>
-                                    <HandCoins color="#FBBF24" size={18} />
-                                    <Text style={styles.statLabel}>Total Spent</Text>
-                                    <Text style={styles.statValue}>$0</Text>
+                            <View style={styles.infoItem}>
+                                <Droplet color="#9CA3AF" size={16} />
+                                <View>
+                                    <Text style={styles.infoLabel}>Color</Text>
+                                    <Text style={styles.infoValue}>{item.color}</Text>
                                 </View>
                             </View>
                         </View>
-                    )}
-                />
-            )}
-        </TabScreen>
+
+                        <View style={styles.separator} />
+
+                        <View style={styles.statsRow}>
+                            <View style={styles.statBox}>
+                                <Fuel color="#60A5FA" size={18} />
+                                <Text style={styles.statLabel}>Fuel Logs</Text>
+                                <Text style={styles.statValue}>0</Text>
+                            </View>
+                            <View style={styles.statBox}>
+                                <Wrench color="#34D399" size={18} />
+                                <Text style={styles.statLabel}>Services</Text>
+                                <Text style={styles.statValue}>0</Text>
+                            </View>
+                            <View style={styles.statBox}>
+                                <HandCoins color="#FBBF24" size={18} />
+                                <Text style={styles.statLabel}>Total Spent</Text>
+                                <Text style={styles.statValue}>$0</Text>
+                            </View>
+                        </View>
+                    </View>
+                )}
+            />
+        </SafeAreaView>
     );
 }
 
@@ -108,7 +118,7 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
-        marginBottom: 16,
+        marginBottom: 0,
     },
     title: {
         color: "#fff",
@@ -132,7 +142,7 @@ const styles = StyleSheet.create({
         fontSize: 16,
     },
     emptyCard: {
-        marginTop: 12,
+        marginTop: 0,
         backgroundColor: "#334155",
         borderRadius: 20,
         padding: 26,
@@ -164,8 +174,10 @@ const styles = StyleSheet.create({
         fontWeight: "700",
     },
     listContent: {
-        paddingBottom: 20,
         gap: 14,
+    },
+    list: {
+        flex: 1,
     },
     vehicleCard: {
         backgroundColor: "#3E4A60",
