@@ -36,7 +36,7 @@ export default function VehiclesScreen() {
                             <Text style={styles.title}>My Vehicles</Text>
                             <Text style={styles.subtitle}>Manage your fleet</Text>
                         </View>
-                        <Pressable style={styles.addButton} onPress={() => router.push("/(tabs)/add")}>
+                        <Pressable style={styles.addButton} onPress={() => router.push("/add-vehicle")}>
                             <Text style={styles.addButtonText}>Add Vehicle</Text>
                         </Pressable>
                     </View>
@@ -46,7 +46,7 @@ export default function VehiclesScreen() {
                         <CarFront color="#94A3B8" size={44} />
                         <Text style={styles.emptyTitle}>No Vehicles Yet</Text>
                         <Text style={styles.emptyText}>Start by adding your first vehicle</Text>
-                        <Pressable style={styles.emptyAction} onPress={() => router.push("/(tabs)/add")}>
+                        <Pressable style={styles.emptyAction} onPress={() => router.push("/add-vehicle")}>
                             <Text style={styles.emptyActionText}>Add Your First Vehicle</Text>
                         </Pressable>
                     </View>
