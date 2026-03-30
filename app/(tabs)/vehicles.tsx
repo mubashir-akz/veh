@@ -1,16 +1,100 @@
-import { CarFront } from "lucide-react-native";
-import { StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { router } from "expo-router";
+import {
+    CarFront,
+    Droplet,
+    Fuel,
+    HandCoins,
+    Wrench,
+} from "lucide-react-native";
+import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { useVehicleStore } from "../../context/vehicle-context";
+import { TabScreen } from "../../components/ui/tab-screen";
 
 export default function VehiclesScreen() {
+    const { vehicles } = useVehicleStore();
+
     return (
-        <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
-            <Text style={styles.title}>Vehicles</Text>
-            <View style={styles.card}>
-                <CarFront color="#94A3B8" size={28} />
-                <Text style={styles.text}>No vehicles yet</Text>
+        <TabScreen style={styles.container}>
+            <View style={styles.header}>
+                <View>
+                    <Text style={styles.title}>My Vehicles</Text>
+                    <Text style={styles.subtitle}>Manage your fleet</Text>
+                </View>
+                <Pressable style={styles.addButton} onPress={() => router.push("/(tabs)/add")}>
+                    <Text style={styles.addButtonText}>Add Vehicle</Text>
+                </Pressable>
             </View>
-        </SafeAreaView>
+
+            {vehicles.length === 0 ? (
+                <View style={styles.emptyCard}>
+                    <CarFront color="#94A3B8" size={44} />
+                    <Text style={styles.emptyTitle}>No Vehicles Yet</Text>
+                    <Text style={styles.emptyText}>Start by adding your first vehicle</Text>
+                    <Pressable style={styles.emptyAction} onPress={() => router.push("/(tabs)/add")}>
+                        <Text style={styles.emptyActionText}>Add Your First Vehicle</Text>
+                    </Pressable>
+                </View>
+            ) : (
+                <FlatList
+                    data={vehicles}
+                    keyExtractor={(item) => item.id}
+                    contentContainerStyle={styles.listContent}
+                    renderItem={({ item }) => (
+                        <View style={styles.vehicleCard}>
+                            <View style={styles.topRow}>
+                                <View style={styles.vehicleIconWrap}>
+                                    <CarFront color="#E2E8F0" size={26} />
+                                </View>
+                                <View style={styles.vehicleInfo}>
+                                    <Text style={styles.vehicleName}>{item.name}</Text>
+                                    <Text style={styles.vehicleMeta}>{`${item.year} ${item.make} ${item.model}`}</Text>
+                                    <Text style={styles.plate}>{item.plate}</Text>
+                                </View>
+                            </View>
+
+                            <View style={styles.separator} />
+
+                            <View style={styles.infoRow}>
+                                <View style={styles.infoItem}>
+                                    <Fuel color="#9CA3AF" size={16} />
+                                    <View>
+                                        <Text style={styles.infoLabel}>Mileage</Text>
+                                        <Text style={styles.infoValue}>{`${item.mileage.toLocaleString()} km`}</Text>
+                                    </View>
+                                </View>
+                                <View style={styles.infoItem}>
+                                    <Droplet color="#9CA3AF" size={16} />
+                                    <View>
+                                        <Text style={styles.infoLabel}>Color</Text>
+                                        <Text style={styles.infoValue}>{item.color}</Text>
+                                    </View>
+                                </View>
+                            </View>
+
+                            <View style={styles.separator} />
+
+                            <View style={styles.statsRow}>
+                                <View style={styles.statBox}>
+                                    <Fuel color="#60A5FA" size={18} />
+                                    <Text style={styles.statLabel}>Fuel Logs</Text>
+                                    <Text style={styles.statValue}>0</Text>
+                                </View>
+                                <View style={styles.statBox}>
+                                    <Wrench color="#34D399" size={18} />
+                                    <Text style={styles.statLabel}>Services</Text>
+                                    <Text style={styles.statValue}>0</Text>
+                                </View>
+                                <View style={styles.statBox}>
+                                    <HandCoins color="#FBBF24" size={18} />
+                                    <Text style={styles.statLabel}>Total Spent</Text>
+                                    <Text style={styles.statValue}>$0</Text>
+                                </View>
+                            </View>
+                        </View>
+                    )}
+                />
+            )}
+        </TabScreen>
     );
 }
 
@@ -19,24 +103,154 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: "#0F172A",
         padding: 20,
-        paddingBottom: 150,
+    },
+    header: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        marginBottom: 16,
     },
     title: {
         color: "#fff",
-        fontSize: 28,
+        fontSize: 42,
         fontWeight: "700",
-        marginBottom: 16,
     },
-    card: {
-        backgroundColor: "#1E293B",
+    subtitle: {
+        color: "#94A3B8",
+        marginTop: 2,
+        fontSize: 16,
+    },
+    addButton: {
+        backgroundColor: "#4F46E5",
         borderRadius: 16,
-        padding: 20,
+        paddingVertical: 10,
+        paddingHorizontal: 14,
+    },
+    addButtonText: {
+        color: "#F8FAFC",
+        fontWeight: "700",
+        fontSize: 16,
+    },
+    emptyCard: {
+        marginTop: 12,
+        backgroundColor: "#334155",
+        borderRadius: 20,
+        padding: 26,
+        borderWidth: 1,
+        borderColor: "rgba(148, 163, 184, 0.4)",
+        alignItems: "center",
+    },
+    emptyTitle: {
+        marginTop: 14,
+        color: "#F8FAFC",
+        fontSize: 18,
+        fontWeight: "700",
+    },
+    emptyText: {
+        marginTop: 10,
+        color: "#CBD5E1",
+        fontSize: 17,
+    },
+    emptyAction: {
+        marginTop: 18,
+        backgroundColor: "#4F46E5",
+        borderRadius: 14,
+        paddingHorizontal: 22,
+        paddingVertical: 12,
+    },
+    emptyActionText: {
+        color: "#F8FAFC",
+        fontSize: 16,
+        fontWeight: "700",
+    },
+    listContent: {
+        paddingBottom: 20,
+        gap: 14,
+    },
+    vehicleCard: {
+        backgroundColor: "#3E4A60",
+        borderRadius: 18,
+        padding: 16,
+        borderWidth: 1,
+        borderColor: "rgba(148, 163, 184, 0.4)",
+    },
+    topRow: {
+        flexDirection: "row",
+    },
+    vehicleIconWrap: {
+        width: 82,
+        height: 82,
+        borderRadius: 18,
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "#6366F1",
+    },
+    vehicleInfo: {
+        flex: 1,
+        marginLeft: 12,
+    },
+    vehicleName: {
+        color: "#F8FAFC",
+        fontSize: 22,
+        fontWeight: "700",
+    },
+    vehicleMeta: {
+        color: "#D1D5DB",
+        marginTop: 5,
+        fontSize: 16,
+        fontWeight: "600",
+    },
+    plate: {
+        color: "#9CA3AF",
+        marginTop: 4,
+        fontSize: 14,
+    },
+    separator: {
+        marginTop: 14,
+        height: 1,
+        backgroundColor: "rgba(148, 163, 184, 0.3)",
+    },
+    infoRow: {
+        marginTop: 12,
+        flexDirection: "row",
+        justifyContent: "space-between",
+    },
+    infoItem: {
         flexDirection: "row",
         alignItems: "center",
+        gap: 8,
+        minWidth: 130,
+    },
+    infoLabel: {
+        color: "#9CA3AF",
+        fontSize: 13,
+    },
+    infoValue: {
+        color: "#F8FAFC",
+        fontSize: 18,
+        fontWeight: "700",
+    },
+    statsRow: {
+        marginTop: 12,
+        flexDirection: "row",
         gap: 10,
     },
-    text: {
+    statBox: {
+        flex: 1,
+        borderRadius: 12,
+        paddingVertical: 12,
+        alignItems: "center",
+        backgroundColor: "#4A5568",
+    },
+    statLabel: {
         color: "#CBD5E1",
-        fontSize: 16,
+        fontSize: 12,
+        marginTop: 6,
+    },
+    statValue: {
+        color: "#F8FAFC",
+        fontSize: 32,
+        fontWeight: "700",
+        marginTop: 2,
     },
 });

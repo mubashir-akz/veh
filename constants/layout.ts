@@ -1,0 +1,3 @@
+export const FLOATING_TAB_HEIGHT = 72;
+export const FLOATING_TAB_BOTTOM_GAP = 6;
+export const FLOATING_TAB_SIDE_PADDING = 24;
