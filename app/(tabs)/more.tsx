@@ -92,6 +92,7 @@ export default function MoreScreen() {
     return (
         <TabScreen style={styles.container}>
             <ScrollView
+                style={styles.scrollView}
                 contentContainerStyle={[styles.scroll, { paddingBottom: tabBarSpacing }]}
                 showsVerticalScrollIndicator={false}
             >
@@ -137,6 +138,7 @@ function MenuRow({ item, last }: { item: MenuItem; last: boolean }) {
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: theme.background },
+    scrollView: { backgroundColor: theme.background },
     scroll: { padding: 20 },
     title: { fontSize: 28, fontWeight: "700", color: theme.textPrimary },
     subtitle: { color: theme.textMuted, fontSize: 14, marginBottom: 24 },

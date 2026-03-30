@@ -39,7 +39,10 @@ export default function VehicleDetailScreen() {
                 </View>
             </View>
 
-            <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+            <ScrollView
+                style={styles.scrollView}
+                contentContainerStyle={styles.scroll}
+                showsVerticalScrollIndicator={false}>
                 {/* Identity card */}
                 <View style={styles.card}>
                     <View style={styles.identityRow}>
@@ -164,6 +167,7 @@ const styles = StyleSheet.create({
     headerText: { flex: 1 },
     headerTitle: { fontSize: 24, fontWeight: "700", color: theme.textPrimary },
     headerSubtitle: { color: theme.textMuted, fontSize: 13, marginTop: 1 },
+    scrollView: { backgroundColor: theme.background },
     scroll: { padding: 20, gap: 16, paddingBottom: 40 },
     card: { backgroundColor: theme.card, borderRadius: 16, padding: 20 },
     identityRow: { flexDirection: "row", alignItems: "center", gap: 16 },

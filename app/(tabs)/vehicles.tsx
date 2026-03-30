@@ -1,10 +1,8 @@
 import { router } from "expo-router";
 import {
     CarFront,
-    Droplet,
+    ChevronRight,
     Fuel,
-    HandCoins,
-    Wrench,
 } from "lucide-react-native";
 import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { TabScreen } from "../../components/ui/tab-screen";
@@ -51,59 +49,40 @@ export default function VehiclesScreen() {
                         </Pressable>
                     </View>
                 }
-                renderItem={({ item }) => (
-                    <Pressable style={styles.vehicleCard} onPress={() => router.push(`/vehicle/${item.id}`)}>
-                        <View style={styles.topRow}>
-                            <View style={styles.vehicleIconWrap}>
-                                <CarFront color="#E2E8F0" size={26} />
-                            </View>
-                            <View style={styles.vehicleInfo}>
-                                <Text style={styles.vehicleName}>{item.name}</Text>
-                                <Text style={styles.vehicleMeta}>{`${item.year} ${item.make} ${item.model}`}</Text>
-                                <Text style={styles.plate}>{item.plate}</Text>
-                            </View>
-                        </View>
+                renderItem={({ item }) => {
+                    const currentMonthLabel = new Date().toLocaleString("en-US", { month: "short" });
+                    const currentMonthSpending = 0;
 
-                        <View style={styles.separator} />
-
-                        <View style={styles.infoRow}>
-                            <View style={styles.infoItem}>
-                                <Fuel color="#9CA3AF" size={16} />
-                                <View>
-                                    <Text style={styles.infoLabel}>Mileage</Text>
-                                    <Text style={styles.infoValue}>{`${item.mileage.toLocaleString()} km`}</Text>
+                    return (
+                        <Pressable style={styles.vehicleCard} onPress={() => router.push(`/vehicle/${item.id}`)}>
+                            <View style={styles.topRow}>
+                                <View style={styles.vehicleIconWrap}>
+                                    <CarFront color="#E2E8F0" size={20} />
+                                </View>
+                                <View style={styles.vehicleInfo}>
+                                    <Text style={styles.vehicleName} numberOfLines={1}>{item.name}</Text>
+                                    <Text style={styles.vehicleMeta}>{`${item.year} ${item.make} ${item.model}`}</Text>
+                                </View>
+                                <View style={styles.quickStats}>
+                                    <Text style={styles.quickStatsLabel}>Mileage</Text>
+                                    <Text style={styles.quickStatsValue}>{`${item.mileage.toLocaleString()} km`}</Text>
                                 </View>
                             </View>
-                            <View style={styles.infoItem}>
-                                <Droplet color="#9CA3AF" size={16} />
-                                <View>
-                                    <Text style={styles.infoLabel}>Color</Text>
-                                    <Text style={styles.infoValue}>{item.color}</Text>
+
+                            <View style={styles.badgesRow}>
+                                <View style={styles.badge}>
+                                    <Fuel color="#60A5FA" size={14} />
+                                    <Text style={styles.badgeText}>{item.plate}</Text>
                                 </View>
+                                <View style={styles.badge}>
+                                    <CarFront color="#34D399" size={14} />
+                                    <Text style={styles.badgeText}>{`${currentMonthLabel}: $${currentMonthSpending.toFixed(2)}`}</Text>
+                                </View>
+                                <ChevronRight color={theme.textMuted} size={18} />
                             </View>
-                        </View>
-
-                        <View style={styles.separator} />
-
-                        <View style={styles.statsRow}>
-                            <View style={styles.statBox}>
-                                <Fuel color="#60A5FA" size={18} />
-                                <Text style={styles.statLabel}>Fuel Logs</Text>
-                                <Text style={styles.statValue}>0</Text>
-                            </View>
-                            <View style={styles.statBox}>
-                                <Wrench color="#34D399" size={18} />
-                                <Text style={styles.statLabel}>Services</Text>
-                                <Text style={styles.statValue}>0</Text>
-                            </View>
-                            <View style={styles.statBox}>
-                                <HandCoins color="#FBBF24" size={18} />
-                                <Text style={styles.statLabel}>Total Spent</Text>
-                                <Text style={styles.statValue}>$0</Text>
-                            </View>
-                        </View>
-                    </Pressable>
-                )}
+                        </Pressable>
+                    );
+                }}
             />
         </TabScreen>
     );
@@ -173,101 +152,80 @@ const styles = StyleSheet.create({
     },
     listContent: {
         padding: 20,
-        gap: 14,
+        gap: 10,
     },
     list: {
         flex: 1,
+        backgroundColor: theme.background,
     },
     vehicleCard: {
         backgroundColor: theme.card,
-        borderRadius: 16,
-        padding: 18,
+        borderRadius: 14,
+        paddingVertical: 12,
+        paddingHorizontal: 14,
     },
     topRow: {
         flexDirection: "row",
         alignItems: "center",
     },
     vehicleIconWrap: {
-        width: 64,
-        height: 64,
-        borderRadius: 16,
+        width: 42,
+        height: 42,
+        borderRadius: 12,
         alignItems: "center",
         justifyContent: "center",
         backgroundColor: theme.surface,
     },
     vehicleInfo: {
         flex: 1,
-        marginLeft: 14,
+        marginLeft: 10,
     },
     vehicleName: {
         color: theme.textPrimary,
-        fontSize: 20,
+        fontSize: 16,
         fontWeight: "700",
     },
     vehicleMeta: {
         color: theme.textMuted,
-        marginTop: 4,
-        fontSize: 14,
+        marginTop: 2,
+        fontSize: 12,
         fontWeight: "500",
     },
-    plate: {
-        color: theme.textLabel,
-        marginTop: 4,
-        fontSize: 14,
+    quickStats: {
+        alignItems: "flex-end",
     },
-    separator: {
-        marginTop: 14,
-        height: 1,
-        backgroundColor: theme.borderRow,
-    },
-    infoRow: {
-        marginTop: 12,
-        flexDirection: "row",
-        justifyContent: "space-between",
-        gap: 12,
-    },
-    infoItem: {
-        flex: 1,
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 8,
-        paddingVertical: 10,
-        paddingHorizontal: 12,
-        borderRadius: 12,
-        backgroundColor: theme.surface,
-    },
-    infoLabel: {
+    quickStatsLabel: {
         color: theme.textMuted,
-        fontSize: 12,
+        fontSize: 10,
+        textTransform: "uppercase",
+        letterSpacing: 0.4,
     },
-    infoValue: {
+    quickStatsValue: {
         color: theme.textPrimary,
-        fontSize: 15,
-        fontWeight: "700",
-    },
-    statsRow: {
-        marginTop: 12,
-        flexDirection: "row",
-        gap: 10,
-    },
-    statBox: {
-        flex: 1,
-        borderRadius: 12,
-        paddingVertical: 12,
-        paddingHorizontal: 8,
-        alignItems: "center",
-        backgroundColor: theme.surface,
-    },
-    statLabel: {
-        color: theme.textMuted,
-        fontSize: 12,
-        marginTop: 6,
-        textAlign: "center",
-    },
-    statValue: {
-        color: theme.textPrimary,
-        fontSize: 24,
+        fontSize: 13,
         fontWeight: "700",
         marginTop: 2,
+    },
+    badgesRow: {
+        marginTop: 10,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: 8,
+    },
+    badge: {
+        flex: 1,
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 6,
+        paddingVertical: 7,
+        paddingHorizontal: 10,
+        borderRadius: 10,
+        backgroundColor: theme.surface,
+    },
+    badgeText: {
+        color: theme.textPrimary,
+        fontSize: 12,
+        fontWeight: "600",
     },
 });
