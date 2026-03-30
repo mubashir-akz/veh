@@ -45,26 +45,6 @@ export default function DashboardScreen() {
         <Text style={styles.emptyText}>No vehicles added yet</Text>
         <Text style={styles.emptySub}>Tap the + button to add your first vehicle</Text>
       </View>
-      <View style={styles.emptyCard}>
-        <Car size={40} color="#94A3B8" />
-        <Text style={styles.emptyText}>No vehicles added yet</Text>
-        <Text style={styles.emptySub}>Tap the + button to add your first vehicle</Text>
-      </View>
-      <View style={styles.emptyCard}>
-        <Car size={40} color="#94A3B8" />
-        <Text style={styles.emptyText}>No vehicles added yet</Text>
-        <Text style={styles.emptySub}>Tap the + button to add your first vehicle</Text>
-      </View>
-      <View style={styles.emptyCard}>
-        <Car size={40} color="#94A3B8" />
-        <Text style={styles.emptyText}>No vehicles added yet</Text>
-        <Text style={styles.emptySub}>Tap the + button to add your first vehicle</Text>
-      </View>
-      <View style={styles.emptyCard}>
-        <Car size={40} color="#94A3B8" />
-        <Text style={styles.emptyText}>No vehicles added yet</Text>
-        <Text style={styles.emptySub}>Tap the + button to add your first vehicle</Text>
-      </View>
     </SafeAreaView>
   );
 }
