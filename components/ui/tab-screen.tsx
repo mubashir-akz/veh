@@ -4,7 +4,6 @@ import {
   type ViewStyle,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useTabBarSpacing } from "../../hooks/use-tab-bar-spacing";
 
 type TabScreenProps = {
   children: ReactNode;
@@ -12,11 +11,9 @@ type TabScreenProps = {
 };
 
 export function TabScreen({ children, style }: TabScreenProps) {
-  const tabBarSpacing = useTabBarSpacing();
-
   return (
     <SafeAreaView
-      style={[style, { paddingBottom: tabBarSpacing }]}
+      style={style}
       edges={["top", "left", "right"]}>
       {children}
     </SafeAreaView>
