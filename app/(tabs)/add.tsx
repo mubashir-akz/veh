@@ -15,6 +15,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTabBarSpacing } from "../../hooks/use-tab-bar-spacing";
 import { useVehicleStore } from "../../context/vehicle-context";
+import { theme } from "../../constants/theme";
 
 export default function AddScreen() {
     const { addVehicle } = useVehicleStore();
@@ -113,7 +114,7 @@ export default function AddScreen() {
                                 value={name}
                                 onChangeText={setName}
                                 placeholder="e.g., My Honda"
-                                placeholderTextColor="#8F9BB0"
+                                placeholderTextColor={theme.placeholder}
                                 style={styles.input}
                             />
 
@@ -124,7 +125,7 @@ export default function AddScreen() {
                                         value={make}
                                         onChangeText={setMake}
                                         placeholder="Honda"
-                                        placeholderTextColor="#8F9BB0"
+                                        placeholderTextColor={theme.placeholder}
                                         style={styles.input}
                                     />
                                 </View>
@@ -134,7 +135,7 @@ export default function AddScreen() {
                                         value={model}
                                         onChangeText={setModel}
                                         placeholder="Civic"
-                                        placeholderTextColor="#8F9BB0"
+                                        placeholderTextColor={theme.placeholder}
                                         style={styles.input}
                                     />
                                 </View>
@@ -147,7 +148,7 @@ export default function AddScreen() {
                                         value={year}
                                         onChangeText={setYear}
                                         placeholder="2026"
-                                        placeholderTextColor="#8F9BB0"
+                                    placeholderTextColor={theme.placeholder}
                                         keyboardType="number-pad"
                                         style={styles.input}
                                     />
@@ -158,7 +159,7 @@ export default function AddScreen() {
                                         value={color}
                                         onChangeText={setColor}
                                         placeholder="Blue"
-                                        placeholderTextColor="#8F9BB0"
+                                    placeholderTextColor={theme.placeholder}
                                         style={styles.input}
                                     />
                                 </View>
@@ -169,7 +170,7 @@ export default function AddScreen() {
                                 value={plate}
                                 onChangeText={setPlate}
                                 placeholder="ABC 1234"
-                                placeholderTextColor="#8F9BB0"
+                                placeholderTextColor={theme.placeholder}
                                 autoCapitalize="characters"
                                 style={styles.input}
                             />
@@ -179,7 +180,7 @@ export default function AddScreen() {
                                 value={mileage}
                                 onChangeText={setMileage}
                                 placeholder="0"
-                                placeholderTextColor="#8F9BB0"
+                                placeholderTextColor={theme.placeholder}
                                 keyboardType="number-pad"
                                 style={styles.input}
                             />
@@ -250,7 +251,7 @@ export default function AddScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#0F172A",
+        backgroundColor: theme.background,
     },
     content: {
         paddingHorizontal: 18,
@@ -268,31 +269,31 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: "#2A3A56",
+        backgroundColor: theme.surface,
         borderWidth: 1,
-        borderColor: "rgba(148, 163, 184, 0.3)",
+        borderColor: theme.borderRow,
     },
     title: {
-        color: "#fff",
+        color: theme.textPrimary,
         fontSize: 38,
         fontWeight: "700",
         lineHeight: 40,
     },
     subtitle: {
-        color: "#9CA3AF",
+        color: theme.textMuted,
         marginTop: 2,
         fontSize: 16,
         fontWeight: "500",
     },
     card: {
-        backgroundColor: "#334155",
+        backgroundColor: theme.card,
         borderRadius: 16,
         padding: 14,
         borderWidth: 1,
-        borderColor: "rgba(148, 163, 184, 0.35)",
+        borderColor: theme.borderSoft,
     },
     label: {
-        color: "#D1D5DB",
+        color: theme.textLabel,
         marginBottom: 8,
         marginTop: 12,
         fontSize: 16,
@@ -300,13 +301,13 @@ const styles = StyleSheet.create({
     },
     input: {
         borderWidth: 1,
-        borderColor: "rgba(148, 163, 184, 0.25)",
+        borderColor: theme.inputBorder,
         borderRadius: 12,
         paddingHorizontal: 14,
         paddingVertical: 12,
-        color: "#F8FAFC",
+        color: theme.textOnDark,
         fontSize: 17,
-        backgroundColor: "#3F4B60",
+        backgroundColor: theme.inputBackground,
     },
     row: {
         flexDirection: "row",
@@ -323,16 +324,18 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         flexDirection: "row",
         gap: 8,
-        backgroundColor: "#4F46E5",
+        backgroundColor: theme.primary,
+        borderWidth: 1,
+        borderColor: theme.primary,
     },
     saveButtonText: {
-        color: "#F8FAFC",
+        color: theme.primaryText,
         fontSize: 17,
         fontWeight: "700",
     },
     modalOverlay: {
         flex: 1,
-        backgroundColor: "rgba(15, 23, 42, 0.62)",
+        backgroundColor: theme.modalOverlay,
         alignItems: "center",
         justifyContent: "center",
         paddingHorizontal: 22,
@@ -340,9 +343,9 @@ const styles = StyleSheet.create({
     modalCard: {
         width: "100%",
         borderRadius: 18,
-        backgroundColor: "#1E293B",
+        backgroundColor: theme.card,
         borderWidth: 1,
-        borderColor: "rgba(148, 163, 184, 0.35)",
+        borderColor: theme.borderSoft,
         padding: 18,
     },
     modalIconWrap: {
@@ -364,13 +367,13 @@ const styles = StyleSheet.create({
         borderColor: "rgba(248, 113, 113, 0.25)",
     },
     modalTitle: {
-        color: "#F8FAFC",
+        color: theme.primaryText,
         fontSize: 20,
         fontWeight: "700",
         marginBottom: 4,
     },
     modalSubtitle: {
-        color: "#CBD5E1",
+        color: theme.textMuted,
         fontSize: 15,
         fontWeight: "500",
         marginBottom: 16,
@@ -386,20 +389,20 @@ const styles = StyleSheet.create({
         borderWidth: 1,
     },
     primaryButton: {
-        backgroundColor: "#4F46E5",
-        borderColor: "#4F46E5",
+        backgroundColor: theme.primary,
+        borderColor: theme.primary,
     },
     primaryButtonText: {
-        color: "#F8FAFC",
+        color: theme.primaryText,
         fontWeight: "700",
         fontSize: 16,
     },
     secondaryButton: {
         backgroundColor: "transparent",
-        borderColor: "rgba(148, 163, 184, 0.35)",
+        borderColor: theme.borderSoft,
     },
     secondaryButtonText: {
-        color: "#E2E8F0",
+        color: theme.textOnDark,
         fontWeight: "700",
         fontSize: 16,
     },

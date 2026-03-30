@@ -10,6 +10,7 @@ import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useVehicleStore } from "../../context/vehicle-context";
 import { useTabBarSpacing } from "../../hooks/use-tab-bar-spacing";
+import { theme } from "../../constants/theme";
 
 export default function VehiclesScreen() {
     const { vehicles } = useVehicleStore();
@@ -111,7 +112,7 @@ export default function VehiclesScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: "#0F172A",
+        backgroundColor: theme.background,
         padding: 20,
     },
     header: {
@@ -143,11 +144,11 @@ const styles = StyleSheet.create({
     },
     emptyCard: {
         marginTop: 0,
-        backgroundColor: "#334155",
+        backgroundColor: theme.card,
         borderRadius: 20,
         padding: 26,
         borderWidth: 1,
-        borderColor: "rgba(148, 163, 184, 0.4)",
+        borderColor: theme.borderSoft,
         alignItems: "center",
     },
     emptyTitle: {
@@ -180,11 +181,11 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     vehicleCard: {
-        backgroundColor: "#3E4A60",
+        backgroundColor: theme.card,
         borderRadius: 18,
         padding: 16,
         borderWidth: 1,
-        borderColor: "rgba(148, 163, 184, 0.4)",
+        borderColor: theme.borderSoft,
     },
     topRow: {
         flexDirection: "row",
@@ -195,7 +196,7 @@ const styles = StyleSheet.create({
         borderRadius: 18,
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: "#6366F1",
+        backgroundColor: theme.surface,
     },
     vehicleInfo: {
         flex: 1,
@@ -220,7 +221,7 @@ const styles = StyleSheet.create({
     separator: {
         marginTop: 14,
         height: 1,
-        backgroundColor: "rgba(148, 163, 184, 0.3)",
+        backgroundColor: theme.borderRow,
     },
     infoRow: {
         marginTop: 12,
@@ -252,7 +253,7 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         paddingVertical: 12,
         alignItems: "center",
-        backgroundColor: "#4A5568",
+        backgroundColor: theme.surface,
     },
     statLabel: {
         color: "#CBD5E1",

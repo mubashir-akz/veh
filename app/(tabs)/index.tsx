@@ -2,6 +2,7 @@ import { Bell, Car } from "lucide-react-native";
 import { type ReactNode } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { theme } from "../../constants/theme";
 
 export default function DashboardScreen() {
   return (
@@ -70,17 +71,17 @@ function Card({ icon, title, value }: CardProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0F172A",
+    backgroundColor: theme.background,
     padding: 20,
     paddingBottom: 150,
   },
   title: {
     fontSize: 28,
     fontWeight: "700",
-    color: "#fff",
+    color: theme.textPrimary,
   },
   subtitle: {
-    color: "#94A3B8",
+    color: theme.textMuted,
     marginBottom: 20,
   },
   row: {
@@ -89,7 +90,7 @@ const styles = StyleSheet.create({
   },
   card: {
     flex: 1,
-    backgroundColor: "#1E293B",
+    backgroundColor: theme.card,
     padding: 15,
     borderRadius: 16,
     flexDirection: "row",
@@ -97,7 +98,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   iconWrap: {
-    backgroundColor: "#334155",
+    backgroundColor: theme.surface,
     padding: 10,
     borderRadius: 12,
   },
@@ -107,11 +108,11 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   cardText: {
-    color: "#94A3B8",
+    color: theme.textMuted,
   },
   bigCard: {
     marginTop: 15,
-    backgroundColor: "#1E293B",
+    backgroundColor: theme.card,
     borderRadius: 16,
     padding: 20,
   },
@@ -130,7 +131,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: "rgba(148, 163, 184, 0.3)",
+    borderBottomColor: theme.borderRow,
   },
   spendingLabel: {
     color: "#E2E8F0",
@@ -148,29 +149,29 @@ const styles = StyleSheet.create({
     paddingTop: 16,
   },
   totalLabel: {
-    color: "#F8FAFC",
+    color: theme.textOnDark,
     fontSize: 18,
     fontWeight: "700",
   },
   totalValue: {
-    color: "#F8FAFC",
+    color: theme.textOnDark,
     fontSize: 18,
     fontWeight: "700",
   },
   emptyCard: {
     marginTop: 20,
-    backgroundColor: "#1E293B",
+    backgroundColor: theme.card,
     borderRadius: 16,
     padding: 30,
     alignItems: "center",
   },
   emptyText: {
-    color: "#fff",
+    color: theme.textPrimary,
     marginTop: 10,
     fontSize: 16,
   },
   emptySub: {
-    color: "#94A3B8",
+    color: theme.textMuted,
     marginTop: 5,
     textAlign: "center",
   },
