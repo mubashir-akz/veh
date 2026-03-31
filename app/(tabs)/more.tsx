@@ -69,7 +69,7 @@ export default function MoreScreen() {
             subtitle: "Sign in to your account",
             iconBg: "#2F7AF8",
             icon: LogIn,
-            onPress: () => { },
+            onPress: () => router.push("/login"),
         },
         {
             key: "settings",
