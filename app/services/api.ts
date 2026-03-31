@@ -1,6 +1,9 @@
 // API Configuration
 // Change this to your server URL when deploying
-const API_BASE_URL = 'http://localhost:3000/api';
+// For NestJS backend running on same machine:
+// const API_BASE_URL = 'http://localhost:3000/api';
+// For production, change to your server URL
+const API_BASE_URL = 'http://10.0.0.175:3000/api';
 
 // Helper function for API calls
 async function fetchAPI(endpoint, options = {}) {
