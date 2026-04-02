@@ -1,6 +1,6 @@
 // API Configuration
 // Cloud Run deployed API
-const API_BASE_URL = 'https://veh-api-686058802069.us-central1.run.app/api';
+const API_BASE_URL = 'https://veh-nestjs-api-686058802069.us-central1.run.app/api';
 
 // Helper function for API calls
 async function fetchAPI(endpoint, options = {}) {
