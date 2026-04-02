@@ -9,22 +9,11 @@ import { tokenStorage } from "./services/api";
 
 export default function RootLayout() {
   const [loading, setLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    checkAuth();
+    // Just load the app - auth check happens in VehicleProvider
+    setLoading(false);
   }, []);
-
-  const checkAuth = async () => {
-    try {
-      const token = await tokenStorage.getToken();
-      setIsAuthenticated(!!token);
-    } catch (error) {
-      setIsAuthenticated(false);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   if (loading) {
     return (
@@ -47,23 +36,10 @@ export default function RootLayout() {
               animation: "fade",
               contentStyle: { backgroundColor: theme.background },
             }}>
-            {!isAuthenticated ? (
-              <>
-                <Stack.Screen name="login" />
-                <Stack.Screen name="signup" />
-              </>
-            ) : (
-              <>
-                <Stack.Screen
-                  name="(tabs)"
-                  options={{ contentStyle: { backgroundColor: theme.background } }}
-                />
-                <Stack.Screen
-                  name="vehicle/[id]"
-                  options={{ contentStyle: { backgroundColor: theme.background } }}
-                />
-              </>
-            )}
+            <Stack.Screen name="login" options={{ contentStyle: { backgroundColor: theme.background } }} />
+            <Stack.Screen name="signup" options={{ contentStyle: { backgroundColor: theme.background } }} />
+            <Stack.Screen name="(tabs)" options={{ contentStyle: { backgroundColor: theme.background } }} />
+            <Stack.Screen name="vehicle/[id]" options={{ contentStyle: { backgroundColor: theme.background } }} />
           </Stack>
         </View>
       </VehicleProvider>
