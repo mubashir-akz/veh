@@ -5,7 +5,7 @@ import { View, ActivityIndicator, StyleSheet } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { theme } from "../constants/theme";
 import { VehicleProvider } from "../context/vehicle-context";
-import { tokenStorage } from "./services/api";
+import { tokenStorage } from "../services/api";
 
 export default function RootLayout() {
   const [loading, setLoading] = useState(true);
