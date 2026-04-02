@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { authAPI, tokenStorage } from "../services/api";
+import { authAPI, tokenStorage } from "./services/api";
 import { theme } from "../constants/theme";
 
 export default function SignupScreen() {
