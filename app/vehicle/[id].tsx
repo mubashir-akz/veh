@@ -10,6 +10,12 @@ export default function VehicleDetailScreen() {
     const { vehicles } = useVehicleStore();
     const vehicle = vehicles.find((v) => v.id === id);
 
+    const vehicleHeading = vehicle
+        ? vehicle.year > 0
+            ? `${vehicle.year} ${vehicle.make.toUpperCase()} ${vehicle.model.toUpperCase()}`
+            : `${vehicle.make.toUpperCase()} ${vehicle.model.toUpperCase()}`
+        : "";
+
     if (!vehicle) {
         return (
             <SafeAreaView style={styles.container} edges={["top", "left", "right"]}>
@@ -50,9 +56,7 @@ export default function VehicleDetailScreen() {
                             <CarFront color="#E2E8F0" size={30} />
                         </View>
                         <View style={styles.identityInfo}>
-                            <Text style={styles.vehicleFullName}>
-                                {vehicle.year} {vehicle.make.toUpperCase()} {vehicle.model.toUpperCase()}
-                            </Text>
+                            <Text style={styles.vehicleFullName}>{vehicleHeading}</Text>
                             <Text style={styles.vehiclePlate}>{vehicle.plate}</Text>
                             <Text style={styles.vehicleColor}>Color: {vehicle.color}</Text>
                         </View>

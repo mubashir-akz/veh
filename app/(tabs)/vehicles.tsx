@@ -4,15 +4,19 @@ import {
     ChevronRight,
     Fuel,
 } from "lucide-react-native";
-import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { TabScreen } from "../../components/ui/tab-screen";
 import { theme } from "../../constants/theme";
 import { useVehicleStore } from "../../context/vehicle-context";
 import { useTabBarSpacing } from "../../hooks/use-tab-bar-spacing";
 
 export default function VehiclesScreen() {
-    const { vehicles } = useVehicleStore();
+    const { vehicles, loading, error, refreshVehicles } = useVehicleStore();
     const tabBarSpacing = useTabBarSpacing(0);
+
+    const handleRefresh = () => {
+        void refreshVehicles();
+    };
 
     return (
         <TabScreen style={styles.container}>
@@ -28,30 +32,53 @@ export default function VehiclesScreen() {
                         paddingBottom: tabBarSpacing,
                     },
                 ]}
+                onRefresh={handleRefresh}
+                refreshing={loading}
                 ListHeaderComponent={
-                    <View style={styles.header}>
-                        <View>
-                            <Text style={styles.title}>My Vehicles</Text>
-                            <Text style={styles.subtitle}>Manage your fleet</Text>
+                    <View style={styles.headerWrap}>
+                        <View style={styles.header}>
+                            <View>
+                                <Text style={styles.title}>My Vehicles</Text>
+                                <Text style={styles.subtitle}>Manage your fleet</Text>
+                            </View>
+                            <Pressable style={styles.addButton} onPress={() => router.push("/add-vehicle")}>
+                                <Text style={styles.addButtonText}>Add Vehicle</Text>
+                            </Pressable>
                         </View>
-                        <Pressable style={styles.addButton} onPress={() => router.push("/add-vehicle")}>
-                            <Text style={styles.addButtonText}>Add Vehicle</Text>
-                        </Pressable>
+
+                        {error ? (
+                            <View style={styles.errorBanner}>
+                                <Text style={styles.errorTitle}>Couldn&apos;t load vehicles</Text>
+                                <Text style={styles.errorText}>{error}</Text>
+                                <Pressable style={styles.retryButton} onPress={handleRefresh}>
+                                    <Text style={styles.retryButtonText}>Retry</Text>
+                                </Pressable>
+                            </View>
+                        ) : null}
                     </View>
                 }
                 ListEmptyComponent={
-                    <View style={styles.emptyCard}>
-                        <CarFront color="#94A3B8" size={44} />
-                        <Text style={styles.emptyTitle}>No Vehicles Yet</Text>
-                        <Text style={styles.emptyText}>Start by adding your first vehicle</Text>
-                        <Pressable style={styles.emptyAction} onPress={() => router.push("/add-vehicle")}>
-                            <Text style={styles.emptyActionText}>Add Your First Vehicle</Text>
-                        </Pressable>
-                    </View>
+                    loading ? (
+                        <View style={styles.emptyCard}>
+                            <ActivityIndicator color={theme.primary} size="large" />
+                            <Text style={styles.emptyTitle}>Loading vehicles</Text>
+                            <Text style={styles.emptyText}>Fetching your latest fleet from the API.</Text>
+                        </View>
+                    ) : (
+                        <View style={styles.emptyCard}>
+                            <CarFront color="#94A3B8" size={44} />
+                            <Text style={styles.emptyTitle}>No Vehicles Yet</Text>
+                            <Text style={styles.emptyText}>Start by adding your first vehicle</Text>
+                            <Pressable style={styles.emptyAction} onPress={() => router.push("/add-vehicle")}>
+                                <Text style={styles.emptyActionText}>Add Your First Vehicle</Text>
+                            </Pressable>
+                        </View>
+                    )
                 }
                 renderItem={({ item }) => {
                     const currentMonthLabel = new Date().toLocaleString("en-US", { month: "short" });
                     const currentMonthSpending = 0;
+                    const vehicleMeta = item.year > 0 ? `${item.year} ${item.make} ${item.model}` : `${item.make} ${item.model}`;
 
                     return (
                         <Pressable style={styles.vehicleCard} onPress={() => router.push(`/vehicle/${item.id}`)}>
@@ -61,7 +88,7 @@ export default function VehiclesScreen() {
                                 </View>
                                 <View style={styles.vehicleInfo}>
                                     <Text style={styles.vehicleName} numberOfLines={1}>{item.name}</Text>
-                                    <Text style={styles.vehicleMeta}>{`${item.year} ${item.make} ${item.model}`}</Text>
+                                    <Text style={styles.vehicleMeta}>{vehicleMeta}</Text>
                                 </View>
                                 <View style={styles.quickStats}>
                                     <Text style={styles.quickStatsLabel}>Mileage</Text>
@@ -93,11 +120,45 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: theme.background,
     },
+    headerWrap: {
+        gap: 12,
+        marginBottom: 4,
+    },
     header: {
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
-        marginBottom: 4,
+    },
+    errorBanner: {
+        backgroundColor: "rgba(248, 113, 113, 0.12)",
+        borderWidth: 1,
+        borderColor: "rgba(248, 113, 113, 0.24)",
+        borderRadius: 14,
+        padding: 14,
+        gap: 6,
+    },
+    errorTitle: {
+        color: theme.primaryText,
+        fontSize: 15,
+        fontWeight: "700",
+    },
+    errorText: {
+        color: theme.textLabel,
+        fontSize: 13,
+        lineHeight: 18,
+    },
+    retryButton: {
+        alignSelf: "flex-start",
+        marginTop: 4,
+        backgroundColor: theme.primary,
+        borderRadius: 999,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+    },
+    retryButtonText: {
+        color: theme.primaryText,
+        fontSize: 12,
+        fontWeight: "700",
     },
     title: {
         color: theme.textPrimary,

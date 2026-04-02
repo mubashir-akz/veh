@@ -2,6 +2,7 @@ import { router } from "expo-router";
 import { AlertTriangle, ArrowLeft, Check } from "lucide-react-native";
 import { useState } from "react";
 import {
+    ActivityIndicator,
     KeyboardAvoidingView,
     Modal,
     Platform,
@@ -29,15 +30,22 @@ export default function AddVehicleScreen() {
     const [messageVariant, setMessageVariant] = useState<"success" | "error">("success");
     const [messageTitle, setMessageTitle] = useState("");
     const [messageSubtitle, setMessageSubtitle] = useState("");
+    const [isSaving, setIsSaving] = useState(false);
 
-    const handleSave = () => {
+    const handleSave = async () => {
+        if (isSaving) {
+            return;
+        }
+
         const trimmedName = name.trim();
         const trimmedMake = make.trim();
         const trimmedModel = model.trim();
         const trimmedColor = color.trim();
         const trimmedPlate = plate.trim().toUpperCase();
-        const parsedYear = Number(year);
-        const parsedMileage = Number(mileage);
+        const trimmedYear = year.trim();
+        const trimmedMileage = mileage.trim();
+        const parsedYear = trimmedYear ? Number(trimmedYear) : undefined;
+        const parsedMileage = trimmedMileage ? Number(trimmedMileage) : undefined;
 
         if (!trimmedName || !trimmedMake || !trimmedModel || !trimmedPlate) {
             setMessageVariant("error");
@@ -47,7 +55,10 @@ export default function AddVehicleScreen() {
             return;
         }
 
-        if (!Number.isInteger(parsedYear) || parsedYear < 1900 || parsedYear > 2100) {
+        if (
+            parsedYear !== undefined &&
+            (!Number.isInteger(parsedYear) || parsedYear < 1900 || parsedYear > 2100)
+        ) {
             setMessageVariant("error");
             setMessageTitle("Invalid year");
             setMessageSubtitle("Please enter a valid year, for example 2026.");
@@ -55,7 +66,10 @@ export default function AddVehicleScreen() {
             return;
         }
 
-        if (!Number.isFinite(parsedMileage) || parsedMileage < 0) {
+        if (
+            parsedMileage !== undefined &&
+            (!Number.isFinite(parsedMileage) || parsedMileage < 0)
+        ) {
             setMessageVariant("error");
             setMessageTitle("Invalid mileage");
             setMessageSubtitle("Please enter a valid mileage.");
@@ -63,28 +77,40 @@ export default function AddVehicleScreen() {
             return;
         }
 
-        addVehicle({
-            name: trimmedName,
-            make: trimmedMake,
-            model: trimmedModel,
-            plate: trimmedPlate,
-            year: parsedYear,
-            color: trimmedColor || "Unknown",
-            mileage: parsedMileage,
-        });
+        try {
+            setIsSaving(true);
 
-        setName("");
-        setMake("");
-        setModel("");
-        setColor("");
-        setPlate("");
-        setYear("");
-        setMileage("");
+            await addVehicle({
+                name: trimmedName,
+                make: trimmedMake,
+                model: trimmedModel,
+                plate: trimmedPlate,
+                ...(parsedYear !== undefined ? { year: parsedYear } : {}),
+                ...(trimmedColor ? { color: trimmedColor } : {}),
+                ...(parsedMileage !== undefined ? { mileage: parsedMileage } : {}),
+            });
 
-        setMessageVariant("success");
-        setMessageTitle("Vehicle added");
-        setMessageSubtitle("Your vehicle has been saved.");
-        setMessageVisible(true);
+            setName("");
+            setMake("");
+            setModel("");
+            setColor("");
+            setPlate("");
+            setYear("");
+            setMileage("");
+
+            setMessageVariant("success");
+            setMessageTitle("Vehicle added");
+            setMessageSubtitle("Your vehicle has been saved to the API.");
+            setMessageVisible(true);
+        } catch (error) {
+            const message = error instanceof Error ? error.message : "Unable to save vehicle right now.";
+            setMessageVariant("error");
+            setMessageTitle("Save failed");
+            setMessageSubtitle(message);
+            setMessageVisible(true);
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     return (
@@ -164,7 +190,7 @@ export default function AddVehicleScreen() {
                                 </View>
                             </View>
 
-                            <Text style={styles.label}>License Plate</Text>
+                            <Text style={styles.label}>License Plate *</Text>
                             <TextInput
                                 value={plate}
                                 onChangeText={setPlate}
@@ -185,9 +211,13 @@ export default function AddVehicleScreen() {
                             />
                         </View>
 
-                        <Pressable style={styles.saveButton} onPress={handleSave}>
-                            <Check color="#F8FAFC" size={20} />
-                            <Text style={styles.saveButtonText}>Add Vehicle</Text>
+                        <Pressable style={[styles.saveButton, isSaving && styles.saveButtonDisabled]} onPress={() => void handleSave()} disabled={isSaving}>
+                            {isSaving ? (
+                                <ActivityIndicator color="#F8FAFC" />
+                            ) : (
+                                <Check color="#F8FAFC" size={20} />
+                            )}
+                            <Text style={styles.saveButtonText}>{isSaving ? "Saving..." : "Add Vehicle"}</Text>
                         </Pressable>
                     </ScrollView>
                 </KeyboardAvoidingView>
@@ -328,6 +358,9 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         gap: 8,
         backgroundColor: theme.primary,
+    },
+    saveButtonDisabled: {
+        opacity: 0.8,
     },
     saveButtonText: {
         color: theme.primaryText,
