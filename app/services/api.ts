@@ -6,9 +6,13 @@ const API_BASE_URL = 'https://veh-nestjs-api-686058802069.us-central1.run.app/ap
 async function fetchAPI(endpoint, options = {}) {
     const url = `${API_BASE_URL}${endpoint}`;
     
+    // Get token from storage
+    const token = await getToken();
+    
     const config = {
         headers: {
             'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
             ...options.headers,
         },
         ...options,
@@ -34,98 +38,91 @@ async function fetchAPI(endpoint, options = {}) {
     }
 }
 
+// ==================== AUTH API ====================
+
+export const authAPI = {
+    register: (data: { email: string; password: string; name: string }) => 
+        fetch(`${API_BASE_URL}/auth/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        }),
+    
+    login: (data: { email: string; password: string }) => 
+        fetch(`${API_BASE_URL}/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        }),
+};
+
+// Token storage (using keychain or async storage - simple version for now)
+let storedToken: string | null = null;
+let storedUser: any = null;
+
+export const tokenStorage = {
+    setToken: (token: string, user: any) => {
+        storedToken = token;
+        storedUser = user;
+    },
+    getToken: async () => storedToken,
+    getUser: async () => storedUser,
+    clear: () => {
+        storedToken = null;
+        storedUser = null;
+    },
+};
+
+async function getToken() {
+    return storedToken;
+}
+
 // ==================== VEHICLES API ====================
 
 export const vehiclesAPI = {
-    // Get all vehicles
     getAll: () => fetchAPI('/vehicles'),
-    
-    // Get single vehicle
-    getById: (id) => fetchAPI(`/vehicles/${id}`),
-    
-    // Create vehicle
-    create: (vehicle) => fetchAPI('/vehicles', {
-        method: 'POST',
-        body: vehicle,
-    }),
-    
-    // Update vehicle
-    update: (id, vehicle) => fetchAPI(`/vehicles/${id}`, {
-        method: 'PUT',
-        body: vehicle,
-    }),
-    
-    // Delete vehicle
-    delete: (id) => fetchAPI(`/vehicles/${id}`, {
-        method: 'DELETE',
-    }),
+    getById: (id: number) => fetchAPI(`/vehicles/${id}`),
+    create: (vehicle: any) => fetchAPI('/vehicles', { method: 'POST', body: vehicle }),
+    update: (id: number, vehicle: any) => fetchAPI(`/vehicles/${id}`, { method: 'PUT', body: vehicle }),
+    delete: (id: number) => fetchAPI(`/vehicles/${id}`, { method: 'DELETE' }),
 };
 
 // ==================== FUEL LOGS API ====================
 
 export const fuelAPI = {
-    // Get fuel logs for vehicle
-    getByVehicle: (vehicleId) => fetchAPI(`/vehicles/${vehicleId}/fuel`),
-    
-    // Add fuel log
-    add: (vehicleId, fuelData) => fetchAPI(`/vehicles/${vehicleId}/fuel`, {
-        method: 'POST',
-        body: fuelData,
-    }),
-    
-    // Delete fuel log
-    delete: (id) => fetchAPI(`/fuel/${id}`, {
-        method: 'DELETE',
-    }),
+    getByVehicle: (vehicleId: number) => fetchAPI(`/vehicles/${vehicleId}/fuel`),
+    add: (vehicleId: number, fuelData: any) => fetchAPI(`/vehicles/${vehicleId}/fuel`, { method: 'POST', body: fuelData }),
+    delete: (id: number) => fetchAPI(`/fuel/${id}`, { method: 'DELETE' }),
 };
 
-// ==================== SERVICE HISTORY API ====================
+// ==================== SERVICE RECORDS API ====================
 
 export const serviceAPI = {
-    // Get service history for vehicle
-    getByVehicle: (vehicleId) => fetchAPI(`/vehicles/${vehicleId}/service`),
-    
-    // Add service record
-    add: (vehicleId, serviceData) => fetchAPI(`/vehicles/${vehicleId}/service`, {
-        method: 'POST',
-        body: serviceData,
-    }),
-    
-    // Delete service record
-    delete: (id) => fetchAPI(`/service/${id}`, {
-        method: 'DELETE',
-    }),
+    getByVehicle: (vehicleId: number) => fetchAPI(`/vehicles/${vehicleId}/service`),
+    add: (vehicleId: number, serviceData: any) => fetchAPI(`/vehicles/${vehicleId}/service`, { method: 'POST', body: serviceData }),
+    delete: (id: number) => fetchAPI(`/service/${id}`, { method: 'DELETE' }),
 };
 
 // ==================== EXPENSES API ====================
 
 export const expensesAPI = {
-    // Get expenses for vehicle
-    getByVehicle: (vehicleId) => fetchAPI(`/vehicles/${vehicleId}/expenses`),
-    
-    // Add expense
-    add: (vehicleId, expenseData) => fetchAPI(`/vehicles/${vehicleId}/expenses`, {
-        method: 'POST',
-        body: expenseData,
-    }),
-    
-    // Delete expense
-    delete: (id) => fetchAPI(`/expenses/${id}`, {
-        method: 'DELETE',
-    }),
+    getByVehicle: (vehicleId: number) => fetchAPI(`/vehicles/${vehicleId}/expenses`),
+    add: (vehicleId: number, expenseData: any) => fetchAPI(`/vehicles/${vehicleId}/expenses`, { method: 'POST', body: expenseData }),
+    delete: (id: number) => fetchAPI(`/expenses/${id}`, { method: 'DELETE' }),
 };
 
 // ==================== DASHBOARD API ====================
 
 export const dashboardAPI = {
-    // Get dashboard summary for vehicle
-    getSummary: (vehicleId) => fetchAPI(`/dashboard/${vehicleId}`),
+    getSummary: (vehicleId: number) => fetchAPI(`/dashboard/${vehicleId}`),
 };
 
 export default {
+    auth: authAPI,
     vehicles: vehiclesAPI,
     fuel: fuelAPI,
     service: serviceAPI,
     expenses: expensesAPI,
     dashboard: dashboardAPI,
+    tokenStorage,
 };
