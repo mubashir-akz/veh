@@ -1,7 +1,8 @@
 import { router } from "expo-router";
 import { ArrowLeft, HandCoins, Plus, TrendingUp, X } from "lucide-react-native";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
+    ActivityIndicator,
     KeyboardAvoidingView,
     Modal,
     Platform,
@@ -20,21 +21,24 @@ const CATEGORIES = ["Fuel", "Service", "Insurance", "Tax", "Repair", "Wash", "Pa
 
 type Category = "Fuel" | "Service" | "Insurance" | "Tax" | "Repair" | "Wash" | "Parking" | "Other";
 
-type ExpenseEntry = {
-    id: string;
-    vehicleName: string;
-    date: string;
-    category: Category;
-    description: string;
-    amount: number;
-};
-
-function todayStr() {
-    const d = new Date();
-    return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
+function todayIso() {
+    return new Date().toISOString().slice(0, 10);
 }
 
-function computeTotals(entries: ExpenseEntry[]) {
+function formatDate(iso: string) {
+    if (!iso) {
+        return "";
+    }
+
+    const [y, m, d] = iso.split("-");
+    if (!y || !m || !d) {
+        return iso;
+    }
+
+    return `${d}/${m}/${y}`;
+}
+
+function computeTotals(entries: { category: string; amount: number }[]) {
     const fuel = entries.filter((e) => e.category === "Fuel").reduce((a, e) => a + e.amount, 0);
     const service = entries.filter((e) => e.category === "Service").reduce((a, e) => a + e.amount, 0);
     const other = entries.filter((e) => e.category !== "Fuel" && e.category !== "Service").reduce((a, e) => a + e.amount, 0);
@@ -42,12 +46,14 @@ function computeTotals(entries: ExpenseEntry[]) {
 }
 
 export default function ExpensesScreen() {
-    const { vehicles } = useVehicleStore();
-    const [entries, setEntries] = useState<ExpenseEntry[]>([]);
+    const { vehicles, expenses, loadExpenses, addExpense } = useVehicleStore();
     const [showForm, setShowForm] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const [activeVehicleId, setActiveVehicleId] = useState("");
 
     const [vehicleId, setVehicleId] = useState("");
-    const [date, setDate] = useState(todayStr());
+    const [date, setDate] = useState(todayIso());
     const [category, setCategory] = useState<Category | "">("");
     const [description, setDescription] = useState("");
     const [amount, setAmount] = useState("");
@@ -56,11 +62,31 @@ export default function ExpensesScreen() {
     const [error, setError] = useState("");
 
     const selectedVehicle = vehicles.find((v) => v.id === vehicleId);
-    const totals = computeTotals(entries);
+    const totals = computeTotals(expenses);
+
+    useEffect(() => {
+        if (vehicles.length === 0) {
+            setActiveVehicleId("");
+            return;
+        }
+
+        if (!activeVehicleId || !vehicles.some((vehicle) => vehicle.id === activeVehicleId)) {
+            setActiveVehicleId(vehicles[0].id);
+        }
+    }, [activeVehicleId, vehicles]);
+
+    useEffect(() => {
+        if (!activeVehicleId) {
+            return;
+        }
+
+        setIsLoading(true);
+        void loadExpenses(activeVehicleId).finally(() => setIsLoading(false));
+    }, [activeVehicleId, loadExpenses]);
 
     const openForm = () => {
-        setVehicleId("");
-        setDate(todayStr());
+        setVehicleId(activeVehicleId || vehicles[0]?.id || "");
+        setDate(todayIso());
         setCategory("");
         setDescription("");
         setAmount("");
@@ -68,7 +94,11 @@ export default function ExpensesScreen() {
         setShowForm(true);
     };
 
-    const handleAdd = () => {
+    const handleAdd = async () => {
+        if (isSaving) {
+            return;
+        }
+
         if (!vehicleId) {
             setError("Please select a vehicle.");
             return;
@@ -82,19 +112,26 @@ export default function ExpensesScreen() {
             setError("Please enter a valid amount.");
             return;
         }
-        const vehicle = vehicles.find((v) => v.id === vehicleId)!;
-        setEntries((prev) => [
-            ...prev,
-            {
-                id: Date.now().toString(),
-                vehicleName: `${vehicle.year} ${vehicle.make} ${vehicle.model}`,
-                date: date.trim() || todayStr(),
-                category: category as Category,
-                description: description.trim(),
+
+        try {
+            setIsSaving(true);
+            await addExpense(vehicleId, {
+                date: date || todayIso(),
+                category,
                 amount: parsedAmount,
-            },
-        ]);
-        setShowForm(false);
+                description: description.trim() || undefined,
+            });
+
+            await loadExpenses(vehicleId);
+            if (activeVehicleId !== vehicleId) {
+                setActiveVehicleId(vehicleId);
+            }
+            setShowForm(false);
+        } catch (requestError) {
+            setError(requestError instanceof Error ? requestError.message : "Failed to add expense.");
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     // ── Modals (shared between both views) ───────────────────
@@ -194,7 +231,7 @@ export default function ExpensesScreen() {
                                         style={styles.input}
                                         value={date}
                                         onChangeText={setDate}
-                                        placeholder="DD/MM/YYYY"
+                                        placeholder="YYYY-MM-DD"
                                         placeholderTextColor={theme.placeholder}
                                     />
                                 </View>
@@ -227,8 +264,9 @@ export default function ExpensesScreen() {
                                 placeholderTextColor={theme.placeholder}
                             />
 
-                            <Pressable style={styles.addBtn} onPress={handleAdd}>
-                                <Text style={styles.addBtnText}>Add Expense</Text>
+                            <Pressable style={[styles.addBtn, isSaving && styles.disabledBtn]} onPress={() => void handleAdd()} disabled={isSaving}>
+                                {isSaving ? <ActivityIndicator color="#fff" size="small" /> : null}
+                                <Text style={styles.addBtnText}>{isSaving ? "Saving..." : "Add Expense"}</Text>
                             </Pressable>
                         </View>
                     </ScrollView>
@@ -255,6 +293,22 @@ export default function ExpensesScreen() {
                     <Text style={styles.addFabText}>Add</Text>
                 </Pressable>
             </View>
+
+            {vehicles.length > 1 ? (
+                <View style={styles.filterBar}>
+                    {vehicles.map((vehicle) => (
+                        <Pressable
+                            key={vehicle.id}
+                            style={[styles.filterChip, activeVehicleId === vehicle.id && styles.filterChipActive]}
+                            onPress={() => setActiveVehicleId(vehicle.id)}>
+                            <Text style={[styles.filterChipText, activeVehicleId === vehicle.id && styles.filterChipTextActive]} numberOfLines={1}>
+                                {vehicle.name}
+                            </Text>
+                        </Pressable>
+                    ))}
+                </View>
+            ) : null}
+
             <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
                 {/* Summary card */}
                 <View style={styles.card}>
@@ -289,17 +343,22 @@ export default function ExpensesScreen() {
 
                 {/* Entries / Empty state */}
                 <View style={styles.card}>
-                    {entries.length === 0 ? (
+                    {isLoading ? (
+                        <View style={styles.empty}>
+                            <ActivityIndicator color={theme.primary} size="large" />
+                            <Text style={styles.emptyTitle}>Loading expenses...</Text>
+                        </View>
+                    ) : expenses.length === 0 ? (
                         <View style={styles.empty}>
                             <HandCoins color={theme.textMuted} size={48} />
                             <Text style={styles.emptyTitle}>No expenses yet</Text>
                             <Text style={styles.emptySubtitle}>Tap Add to log your first expense</Text>
                         </View>
                     ) : (
-                        entries.map((entry, idx) => (
+                        expenses.map((entry, idx) => (
                             <View
                                 key={entry.id}
-                                style={[styles.entryRow, idx < entries.length - 1 && styles.entryRowBorder]}
+                                style={[styles.entryRow, idx < expenses.length - 1 && styles.entryRowBorder]}
                             >
                                 <View style={styles.entryIconWrap}>
                                     <HandCoins color="#FF7A00" size={20} />
@@ -309,7 +368,7 @@ export default function ExpensesScreen() {
                                         {entry.category}{entry.description ? ` · ${entry.description}` : ""}
                                     </Text>
                                     <Text style={styles.entrySub}>
-                                        {entry.vehicleName} · {entry.date}
+                                        {(vehicles.find((v) => v.id === entry.vehicleId)?.name) || "Vehicle"} · {formatDate(entry.date)}
                                     </Text>
                                 </View>
                                 <Text style={styles.entryAmount}>${entry.amount.toFixed(2)}</Text>
@@ -334,6 +393,31 @@ const styles = StyleSheet.create({
     },
     title: { fontSize: 28, fontWeight: "700", color: theme.textPrimary },
     subtitle: { color: theme.textMuted, fontSize: 13, marginTop: 2 },
+    filterBar: {
+        flexDirection: "row",
+        paddingHorizontal: 20,
+        gap: 8,
+        marginBottom: 4,
+        flexWrap: "wrap",
+    },
+    filterChip: {
+        backgroundColor: theme.surface,
+        borderRadius: 999,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        maxWidth: "48%",
+    },
+    filterChipActive: {
+        backgroundColor: "#FF7A00",
+    },
+    filterChipText: {
+        color: theme.textMuted,
+        fontSize: 12,
+        fontWeight: "600",
+    },
+    filterChipTextActive: {
+        color: "#fff",
+    },
     closeBtn: {
         width: 40,
         height: 40,
@@ -419,7 +503,11 @@ const styles = StyleSheet.create({
         paddingVertical: 15,
         alignItems: "center",
         marginTop: 20,
+        flexDirection: "row",
+        justifyContent: "center",
+        gap: 8,
     },
+    disabledBtn: { opacity: 0.8 },
     addBtnText: { color: "#fff", fontWeight: "700", fontSize: 16 },
     empty: { alignItems: "center", paddingVertical: 32 },
     emptyTitle: { color: theme.textPrimary, fontSize: 16, fontWeight: "600", marginTop: 14 },

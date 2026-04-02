@@ -1,7 +1,8 @@
 import { router } from "expo-router";
 import { ArrowLeft, Fuel, Plus, X } from "lucide-react-native";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
+    ActivityIndicator,
     KeyboardAvoidingView,
     Modal,
     Platform,
@@ -16,29 +17,33 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { theme } from "../constants/theme";
 import { useVehicleStore } from "../context/vehicle-context";
 
-type FuelEntry = {
-    id: string;
-    vehicleName: string;
-    date: string;
-    liters: number;
-    pricePerLiter: number;
-    mileage: number;
-    station: string;
-};
+function todayIso() {
+    return new Date().toISOString().slice(0, 10);
+}
 
-function todayStr() {
-    const d = new Date();
-    return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
+function formatDate(iso: string) {
+    if (!iso) {
+        return "";
+    }
+
+    const [y, m, d] = iso.split("-");
+    if (!y || !m || !d) {
+        return iso;
+    }
+
+    return `${d}/${m}/${y}`;
 }
 
 export default function FuelLogScreen() {
-    const { vehicles } = useVehicleStore();
-    const [entries, setEntries] = useState<FuelEntry[]>([]);
+    const { vehicles, fuelLogs, loadFuelLogs, addFuelLog } = useVehicleStore();
     const [showForm, setShowForm] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const [activeVehicleId, setActiveVehicleId] = useState("");
 
     // Form state
     const [vehicleId, setVehicleId] = useState("");
-    const [date, setDate] = useState(todayStr());
+    const [date, setDate] = useState(todayIso());
     const [liters, setLiters] = useState("");
     const [pricePerLiter, setPricePerLiter] = useState("");
     const [mileage, setMileage] = useState("");
@@ -48,9 +53,29 @@ export default function FuelLogScreen() {
 
     const selectedVehicle = vehicles.find((v) => v.id === vehicleId);
 
+    useEffect(() => {
+        if (vehicles.length === 0) {
+            setActiveVehicleId("");
+            return;
+        }
+
+        if (!activeVehicleId || !vehicles.some((vehicle) => vehicle.id === activeVehicleId)) {
+            setActiveVehicleId(vehicles[0].id);
+        }
+    }, [activeVehicleId, vehicles]);
+
+    useEffect(() => {
+        if (!activeVehicleId) {
+            return;
+        }
+
+        setIsLoading(true);
+        void loadFuelLogs(activeVehicleId).finally(() => setIsLoading(false));
+    }, [activeVehicleId, loadFuelLogs]);
+
     const openForm = () => {
-        setVehicleId("");
-        setDate(todayStr());
+        setVehicleId(activeVehicleId || vehicles[0]?.id || "");
+        setDate(todayIso());
         setLiters("");
         setPricePerLiter("");
         setMileage("");
@@ -59,7 +84,11 @@ export default function FuelLogScreen() {
         setShowForm(true);
     };
 
-    const handleAdd = () => {
+    const handleAdd = async () => {
+        if (isSaving) {
+            return;
+        }
+
         if (!vehicleId) {
             setError("Please select a vehicle.");
             return;
@@ -69,20 +98,40 @@ export default function FuelLogScreen() {
             setError("Please enter a valid liters value.");
             return;
         }
-        const vehicle = vehicles.find((v) => v.id === vehicleId)!;
-        setEntries((prev) => [
-            ...prev,
-            {
-                id: Date.now().toString(),
-                vehicleName: `${vehicle.year} ${vehicle.make} ${vehicle.model}`,
-                date: date.trim() || todayStr(),
-                liters: parsedLiters,
-                pricePerLiter: parseFloat(pricePerLiter) || 0,
-                mileage: parseFloat(mileage) || 0,
-                station: station.trim(),
-            },
-        ]);
-        setShowForm(false);
+
+        const parsedMileage = parseFloat(mileage);
+        if (!mileage.trim() || Number.isNaN(parsedMileage) || parsedMileage < 0) {
+            setError("Please enter a valid mileage.");
+            return;
+        }
+
+        const parsedPrice = parseFloat(pricePerLiter);
+        if (!pricePerLiter.trim() || Number.isNaN(parsedPrice) || parsedPrice < 0) {
+            setError("Please enter a valid price per liter.");
+            return;
+        }
+
+        try {
+            setIsSaving(true);
+            await addFuelLog(vehicleId, {
+                date: date || todayIso(),
+                odometer: parsedMileage,
+                fuelAmount: parsedLiters,
+                pricePerLiter: parsedPrice,
+                fuelType: "Petrol",
+                location: station.trim() || undefined,
+            });
+
+            await loadFuelLogs(vehicleId);
+            if (activeVehicleId !== vehicleId) {
+                setActiveVehicleId(vehicleId);
+            }
+            setShowForm(false);
+        } catch (requestError) {
+            setError(requestError instanceof Error ? requestError.message : "Failed to add fuel entry.");
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     // ── Form view ────────────────────────────────────────────
@@ -120,7 +169,7 @@ export default function FuelLogScreen() {
                                         style={styles.input}
                                         value={date}
                                         onChangeText={setDate}
-                                        placeholder="DD/MM/YYYY"
+                                        placeholder="YYYY-MM-DD"
                                         placeholderTextColor={theme.placeholder}
                                     />
                                 </View>
@@ -168,8 +217,9 @@ export default function FuelLogScreen() {
                                 placeholderTextColor={theme.placeholder}
                             />
 
-                            <Pressable style={styles.addBtn} onPress={handleAdd}>
-                                <Text style={styles.addBtnText}>Add Entry</Text>
+                            <Pressable style={[styles.addBtn, isSaving && styles.disabledBtn]} onPress={() => void handleAdd()} disabled={isSaving}>
+                                {isSaving ? <ActivityIndicator color="#fff" size="small" /> : null}
+                                <Text style={styles.addBtnText}>{isSaving ? "Saving..." : "Add Entry"}</Text>
                             </Pressable>
                         </View>
                     </ScrollView>
@@ -223,7 +273,7 @@ export default function FuelLogScreen() {
                 </Pressable>
                 <View style={{ flex: 1, marginLeft: 12 }}>
                     <Text style={styles.title}>Fuel Log</Text>
-                    <Text style={styles.subtitle}>Track your fuel expenses</Text>
+                    <Text style={styles.subtitle}>Track fuel by vehicle</Text>
                 </View>
                 <Pressable style={styles.addFab} onPress={openForm}>
                     <Plus color="#fff" size={18} />
@@ -231,35 +281,51 @@ export default function FuelLogScreen() {
                 </Pressable>
             </View>
 
+            {vehicles.length > 1 ? (
+                <View style={styles.filterBar}>
+                    {vehicles.map((vehicle) => (
+                        <Pressable
+                            key={vehicle.id}
+                            style={[styles.filterChip, activeVehicleId === vehicle.id && styles.filterChipActive]}
+                            onPress={() => setActiveVehicleId(vehicle.id)}>
+                            <Text style={[styles.filterChipText, activeVehicleId === vehicle.id && styles.filterChipTextActive]} numberOfLines={1}>
+                                {vehicle.name}
+                            </Text>
+                        </Pressable>
+                    ))}
+                </View>
+            ) : null}
+
             <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
                 <View style={styles.card}>
-                    {entries.length === 0 ? (
+                    {isLoading ? (
+                        <View style={styles.empty}>
+                            <ActivityIndicator color={theme.primary} size="large" />
+                            <Text style={styles.emptyTitle}>Loading fuel logs...</Text>
+                        </View>
+                    ) : fuelLogs.length === 0 ? (
                         <View style={styles.empty}>
                             <Fuel color={theme.textMuted} size={48} />
                             <Text style={styles.emptyTitle}>No fuel entries yet</Text>
                             <Text style={styles.emptySubtitle}>Tap Add to log your first entry</Text>
                         </View>
                     ) : (
-                        entries.map((entry, idx) => (
+                        fuelLogs.map((entry, idx) => (
                             <View
                                 key={entry.id}
-                                style={[styles.entryRow, idx < entries.length - 1 && styles.entryRowBorder]}
+                                style={[styles.entryRow, idx < fuelLogs.length - 1 && styles.entryRowBorder]}
                             >
                                 <View style={styles.entryIconWrap}>
                                     <Fuel color="#60A5FA" size={18} />
                                 </View>
                                 <View style={{ flex: 1 }}>
-                                    <Text style={styles.entryName}>{entry.vehicleName}</Text>
+                                    <Text style={styles.entryName}>{(vehicles.find((v) => v.id === entry.vehicleId)?.name) || "Vehicle"}</Text>
                                     <Text style={styles.entrySub}>
-                                        {entry.date} · {entry.liters}L
-                                        {entry.station ? ` · ${entry.station}` : ""}
+                                        {formatDate(entry.date)} · {entry.fuelAmount}L
+                                        {entry.location ? ` · ${entry.location}` : ""}
                                     </Text>
                                 </View>
-                                {entry.pricePerLiter > 0 && (
-                                    <Text style={styles.entryAmount}>
-                                        ${(entry.liters * entry.pricePerLiter).toFixed(2)}
-                                    </Text>
-                                )}
+                                <Text style={styles.entryAmount}>${entry.totalCost.toFixed(2)}</Text>
                             </View>
                         ))
                     )}
@@ -280,6 +346,31 @@ const styles = StyleSheet.create({
     },
     title: { fontSize: 24, fontWeight: "700", color: theme.textPrimary },
     subtitle: { color: theme.textMuted, fontSize: 13, marginTop: 2 },
+    filterBar: {
+        flexDirection: "row",
+        paddingHorizontal: 20,
+        gap: 8,
+        marginBottom: 4,
+        flexWrap: "wrap",
+    },
+    filterChip: {
+        backgroundColor: theme.surface,
+        borderRadius: 999,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        maxWidth: "48%",
+    },
+    filterChipActive: {
+        backgroundColor: theme.primary,
+    },
+    filterChipText: {
+        color: theme.textMuted,
+        fontSize: 12,
+        fontWeight: "600",
+    },
+    filterChipTextActive: {
+        color: theme.primaryText,
+    },
     iconBtn: {
         width: 40,
         height: 40,
@@ -334,7 +425,11 @@ const styles = StyleSheet.create({
         paddingVertical: 15,
         alignItems: "center",
         marginTop: 20,
+        flexDirection: "row",
+        justifyContent: "center",
+        gap: 8,
     },
+    disabledBtn: { opacity: 0.8 },
     addBtnText: { color: "#fff", fontWeight: "700", fontSize: 16 },
     empty: { alignItems: "center", paddingVertical: 32 },
     emptyTitle: { color: theme.textPrimary, fontSize: 16, fontWeight: "600", marginTop: 14 },

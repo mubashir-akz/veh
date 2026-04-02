@@ -1,7 +1,8 @@
 import { router } from "expo-router";
 import { ArrowLeft, Plus, Wrench, X } from "lucide-react-native";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
+    ActivityIndicator,
     KeyboardAvoidingView,
     Modal,
     Platform,
@@ -28,29 +29,32 @@ const SERVICE_TYPES = [
     "Other",
 ];
 
-type ServiceRecord = {
-    id: string;
-    vehicleName: string;
-    date: string;
-    serviceType: string;
-    description: string;
-    cost: number;
-    mileage: number;
-    provider: string;
-};
+function todayIso() {
+    return new Date().toISOString().slice(0, 10);
+}
 
-function todayStr() {
-    const d = new Date();
-    return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
+function formatDate(iso: string) {
+    if (!iso) {
+        return "";
+    }
+
+    const [y, m, d] = iso.split("-");
+    if (!y || !m || !d) {
+        return iso;
+    }
+
+    return `${d}/${m}/${y}`;
 }
 
 export default function ServiceHistoryScreen() {
-    const { vehicles } = useVehicleStore();
-    const [records, setRecords] = useState<ServiceRecord[]>([]);
+    const { vehicles, serviceRecords, loadServiceRecords, addServiceRecord } = useVehicleStore();
     const [showForm, setShowForm] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const [activeVehicleId, setActiveVehicleId] = useState("");
 
     const [vehicleId, setVehicleId] = useState("");
-    const [date, setDate] = useState(todayStr());
+    const [date, setDate] = useState(todayIso());
     const [serviceType, setServiceType] = useState("");
     const [description, setDescription] = useState("");
     const [cost, setCost] = useState("");
@@ -62,9 +66,29 @@ export default function ServiceHistoryScreen() {
 
     const selectedVehicle = vehicles.find((v) => v.id === vehicleId);
 
+    useEffect(() => {
+        if (vehicles.length === 0) {
+            setActiveVehicleId("");
+            return;
+        }
+
+        if (!activeVehicleId || !vehicles.some((vehicle) => vehicle.id === activeVehicleId)) {
+            setActiveVehicleId(vehicles[0].id);
+        }
+    }, [activeVehicleId, vehicles]);
+
+    useEffect(() => {
+        if (!activeVehicleId) {
+            return;
+        }
+
+        setIsLoading(true);
+        void loadServiceRecords(activeVehicleId).finally(() => setIsLoading(false));
+    }, [activeVehicleId, loadServiceRecords]);
+
     const openForm = () => {
-        setVehicleId("");
-        setDate(todayStr());
+        setVehicleId(activeVehicleId || vehicles[0]?.id || "");
+        setDate(todayIso());
         setServiceType("");
         setDescription("");
         setCost("");
@@ -74,7 +98,11 @@ export default function ServiceHistoryScreen() {
         setShowForm(true);
     };
 
-    const handleAdd = () => {
+    const handleAdd = async () => {
+        if (isSaving) {
+            return;
+        }
+
         if (!vehicleId) {
             setError("Please select a vehicle.");
             return;
@@ -87,21 +115,40 @@ export default function ServiceHistoryScreen() {
             setError("Description is required.");
             return;
         }
-        const vehicle = vehicles.find((v) => v.id === vehicleId)!;
-        setRecords((prev) => [
-            ...prev,
-            {
-                id: Date.now().toString(),
-                vehicleName: `${vehicle.year} ${vehicle.make} ${vehicle.model}`,
-                date: date.trim() || todayStr(),
+
+        const parsedMileage = parseFloat(mileage);
+        if (!mileage.trim() || Number.isNaN(parsedMileage) || parsedMileage < 0) {
+            setError("Please enter a valid mileage.");
+            return;
+        }
+
+        const parsedCost = parseFloat(cost);
+        if (cost.trim() && (Number.isNaN(parsedCost) || parsedCost < 0)) {
+            setError("Please enter a valid cost.");
+            return;
+        }
+
+        try {
+            setIsSaving(true);
+            await addServiceRecord(vehicleId, {
+                date: date || todayIso(),
+                odometer: parsedMileage,
                 serviceType,
                 description: description.trim(),
-                cost: parseFloat(cost) || 0,
-                mileage: parseFloat(mileage) || 0,
-                provider: provider.trim(),
-            },
-        ]);
-        setShowForm(false);
+                cost: cost.trim() ? parsedCost : undefined,
+                serviceCenter: provider.trim() || undefined,
+            });
+
+            await loadServiceRecords(vehicleId);
+            if (activeVehicleId !== vehicleId) {
+                setActiveVehicleId(vehicleId);
+            }
+            setShowForm(false);
+        } catch (requestError) {
+            setError(requestError instanceof Error ? requestError.message : "Failed to add service record.");
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     // Shared pickers
@@ -201,7 +248,7 @@ export default function ServiceHistoryScreen() {
                                         style={styles.input}
                                         value={date}
                                         onChangeText={setDate}
-                                        placeholder="DD/MM/YYYY"
+                                        placeholder="YYYY-MM-DD"
                                         placeholderTextColor={theme.placeholder}
                                     />
                                 </View>
@@ -260,8 +307,9 @@ export default function ServiceHistoryScreen() {
                                 placeholderTextColor={theme.placeholder}
                             />
 
-                            <Pressable style={styles.addBtn} onPress={handleAdd}>
-                                <Text style={styles.addBtnText}>Add Record</Text>
+                            <Pressable style={[styles.addBtn, isSaving && styles.disabledBtn]} onPress={() => void handleAdd()} disabled={isSaving}>
+                                {isSaving ? <ActivityIndicator color="#fff" size="small" /> : null}
+                                <Text style={styles.addBtnText}>{isSaving ? "Saving..." : "Add Record"}</Text>
                             </Pressable>
                         </View>
                     </ScrollView>
@@ -289,19 +337,39 @@ export default function ServiceHistoryScreen() {
                 </Pressable>
             </View>
 
+            {vehicles.length > 1 ? (
+                <View style={styles.filterBar}>
+                    {vehicles.map((vehicle) => (
+                        <Pressable
+                            key={vehicle.id}
+                            style={[styles.filterChip, activeVehicleId === vehicle.id && styles.filterChipActive]}
+                            onPress={() => setActiveVehicleId(vehicle.id)}>
+                            <Text style={[styles.filterChipText, activeVehicleId === vehicle.id && styles.filterChipTextActive]} numberOfLines={1}>
+                                {vehicle.name}
+                            </Text>
+                        </Pressable>
+                    ))}
+                </View>
+            ) : null}
+
             <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
                 <View style={styles.card}>
-                    {records.length === 0 ? (
+                    {isLoading ? (
+                        <View style={styles.empty}>
+                            <ActivityIndicator color={theme.primary} size="large" />
+                            <Text style={styles.emptyTitle}>Loading service records...</Text>
+                        </View>
+                    ) : serviceRecords.length === 0 ? (
                         <View style={styles.empty}>
                             <Wrench color={theme.textMuted} size={48} />
                             <Text style={styles.emptyTitle}>No service records yet</Text>
                             <Text style={styles.emptySubtitle}>Tap Add to log your first record</Text>
                         </View>
                     ) : (
-                        records.map((rec, idx) => (
+                        serviceRecords.map((rec, idx) => (
                             <View
                                 key={rec.id}
-                                style={[styles.entryRow, idx < records.length - 1 && styles.entryRowBorder]}
+                                style={[styles.entryRow, idx < serviceRecords.length - 1 && styles.entryRowBorder]}
                             >
                                 <View style={styles.entryIconWrap}>
                                     <Wrench color="#34D399" size={18} />
@@ -309,7 +377,7 @@ export default function ServiceHistoryScreen() {
                                 <View style={{ flex: 1 }}>
                                     <Text style={styles.entryName}>{rec.serviceType}</Text>
                                     <Text style={styles.entrySub}>
-                                        {rec.vehicleName} · {rec.date}
+                                        {(vehicles.find((v) => v.id === rec.vehicleId)?.name) || "Vehicle"} · {formatDate(rec.date)}
                                     </Text>
                                 </View>
                                 {rec.cost > 0 && (
@@ -336,6 +404,31 @@ const styles = StyleSheet.create({
     },
     title: { fontSize: 28, fontWeight: "700", color: theme.textPrimary },
     subtitle: { color: theme.textMuted, fontSize: 13, marginTop: 2 },
+    filterBar: {
+        flexDirection: "row",
+        paddingHorizontal: 20,
+        gap: 8,
+        marginBottom: 4,
+        flexWrap: "wrap",
+    },
+    filterChip: {
+        backgroundColor: theme.surface,
+        borderRadius: 999,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        maxWidth: "48%",
+    },
+    filterChipActive: {
+        backgroundColor: "#11C767",
+    },
+    filterChipText: {
+        color: theme.textMuted,
+        fontSize: 12,
+        fontWeight: "600",
+    },
+    filterChipTextActive: {
+        color: "#fff",
+    },
     iconBtn: {
         width: 40,
         height: 40,
@@ -399,7 +492,11 @@ const styles = StyleSheet.create({
         paddingVertical: 15,
         alignItems: "center",
         marginTop: 20,
+        flexDirection: "row",
+        justifyContent: "center",
+        gap: 8,
     },
+    disabledBtn: { opacity: 0.8 },
     addBtnText: { color: "#fff", fontWeight: "700", fontSize: 16 },
     empty: { alignItems: "center", paddingVertical: 32 },
     emptyTitle: { color: theme.textPrimary, fontSize: 16, fontWeight: "600", marginTop: 14 },

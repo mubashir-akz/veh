@@ -1,5 +1,6 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { ArrowLeft, CarFront, Fuel, TrendingUp, Wrench } from "lucide-react-native";
+import { useEffect } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { theme } from "../../constants/theme";
@@ -7,8 +8,18 @@ import { useVehicleStore } from "../../context/vehicle-context";
 
 export default function VehicleDetailScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
-    const { vehicles } = useVehicleStore();
+    const { vehicles, dashboardData, fuelLogs, serviceRecords, loadDashboard, loadFuelLogs, loadServiceRecords } = useVehicleStore();
     const vehicle = vehicles.find((v) => v.id === id);
+
+    useEffect(() => {
+        if (!id) {
+            return;
+        }
+
+        void loadDashboard(id);
+        void loadFuelLogs(id);
+        void loadServiceRecords(id);
+    }, [id, loadDashboard, loadFuelLogs, loadServiceRecords]);
 
     const vehicleHeading = vehicle
         ? vehicle.year > 0
@@ -78,7 +89,7 @@ export default function VehicleDetailScreen() {
                                 <TrendingUp color="#34D399" size={16} />
                                 <Text style={styles.statLabel}>Total Spent</Text>
                             </View>
-                            <Text style={styles.statValue}>$0.00</Text>
+                            <Text style={styles.statValue}>${(dashboardData?.totalSpent ?? 0).toFixed(2)}</Text>
                         </View>
                     </View>
                 </View>
@@ -89,14 +100,14 @@ export default function VehicleDetailScreen() {
                         <View style={[styles.countIcon, { backgroundColor: "#2F7AF822" }]}>
                             <Fuel color="#60A5FA" size={22} />
                         </View>
-                        <Text style={styles.countNum}>0</Text>
+                        <Text style={styles.countNum}>{fuelLogs.length}</Text>
                         <Text style={styles.countLabel}>Fuel Logs</Text>
                     </View>
                     <View style={[styles.countCard, { flex: 1 }]}>
                         <View style={[styles.countIcon, { backgroundColor: "#11C76722" }]}>
                             <Wrench color="#34D399" size={22} />
                         </View>
-                        <Text style={styles.countNum}>0</Text>
+                        <Text style={styles.countNum}>{serviceRecords.length}</Text>
                         <Text style={styles.countLabel}>Services</Text>
                     </View>
                 </View>
@@ -110,7 +121,7 @@ export default function VehicleDetailScreen() {
                             <Fuel color="#60A5FA" size={16} />
                             <Text style={styles.breakdownLabel}>Fuel</Text>
                         </View>
-                        <Text style={[styles.breakdownValue, { color: "#60A5FA" }]}>$0.00</Text>
+                        <Text style={[styles.breakdownValue, { color: "#60A5FA" }]}>${(dashboardData?.totalFuel ?? 0).toFixed(2)}</Text>
                     </View>
 
                     <View style={styles.breakdownRow}>
@@ -118,7 +129,7 @@ export default function VehicleDetailScreen() {
                             <Wrench color="#34D399" size={16} />
                             <Text style={styles.breakdownLabel}>Service</Text>
                         </View>
-                        <Text style={[styles.breakdownValue, { color: "#34D399" }]}>$0.00</Text>
+                        <Text style={[styles.breakdownValue, { color: "#34D399" }]}>${(dashboardData?.totalService ?? 0).toFixed(2)}</Text>
                     </View>
 
                     <View style={styles.breakdownRow}>
@@ -126,14 +137,14 @@ export default function VehicleDetailScreen() {
                             <Text style={styles.dollarSign}>$</Text>
                             <Text style={styles.breakdownLabel}>Other Expenses</Text>
                         </View>
-                        <Text style={[styles.breakdownValue, { color: "#FF7A00" }]}>$0.00</Text>
+                        <Text style={[styles.breakdownValue, { color: "#FF7A00" }]}>${(dashboardData?.totalExpenses ?? 0).toFixed(2)}</Text>
                     </View>
 
                     <View style={styles.separator} />
 
                     <View style={[styles.breakdownRow, { paddingBottom: 0 }]}>
                         <Text style={styles.totalLabel}>Total</Text>
-                        <Text style={styles.totalValue}>$0.00</Text>
+                        <Text style={styles.totalValue}>${(dashboardData?.totalSpent ?? 0).toFixed(2)}</Text>
                     </View>
                 </View>
 
