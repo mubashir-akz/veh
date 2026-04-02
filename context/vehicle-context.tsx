@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import {
+  hasAuthToken,
   vehiclesAPI,
   type CreateVehiclePayload,
   type VehicleResponse,
@@ -71,6 +72,11 @@ export function VehicleProvider({ children }: VehicleProviderProps) {
   const [error, setError] = useState<string | null>(null);
 
   const refreshVehicles = useCallback(async () => {
+    if (!hasAuthToken()) {
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
 
     try {

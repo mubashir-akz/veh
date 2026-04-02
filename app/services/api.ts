@@ -1,4 +1,16 @@
-const API_BASE_URL = "https://veh-nestjs-api-686058802069.us-central1.run.app/api";
+const ROOT_URL = "https://veh-nestjs-api-686058802069.us-central1.run.app";
+const API_BASE_URL = `${ROOT_URL}/api`;
+
+// ─── Auth token ────────────────────────────────────────────────────────────
+let _authToken: string | null = null;
+
+export function setAuthToken(token: string | null): void {
+    _authToken = token;
+}
+
+export function hasAuthToken(): boolean {
+    return _authToken !== null;
+}
 
 type FetchApiOptions = Omit<RequestInit, "body" | "headers"> & {
     body?: unknown;
@@ -32,18 +44,34 @@ export type CreateVehiclePayload = {
     mileage?: number;
 };
 
+export type AuthUser = {
+    id: number;
+    email: string;
+    name: string;
+};
+
+export type AuthResponse = {
+    access_token: string;
+    user: AuthUser;
+};
+
 function isWrappedResponse<T>(value: unknown): value is WrappedResponse<T> {
     return typeof value === "object" && value !== null && "data" in value;
 }
 
 function getErrorMessage(data: unknown) {
     if (typeof data === "object" && data !== null) {
-        if ("error" in data && typeof data.error === "string") {
-            return data.error;
+        const obj = data as Record<string, unknown>;
+        if ("message" in obj) {
+            if (Array.isArray(obj.message) && obj.message.length > 0 && typeof obj.message[0] === "string") {
+                return obj.message[0];
+            }
+            if (typeof obj.message === "string" && obj.message) {
+                return obj.message;
+            }
         }
-
-        if ("message" in data && typeof data.message === "string") {
-            return data.message;
+        if ("error" in obj && typeof obj.error === "string" && obj.error) {
+            return obj.error;
         }
     }
 
@@ -57,6 +85,7 @@ async function fetchAPI<T>(endpoint: string, options: FetchApiOptions = {}): Pro
         ...restOptions,
         headers: {
             "Content-Type": "application/json",
+            ...(_authToken ? { Authorization: `Bearer ${_authToken}` } : {}),
             ...headers,
         },
     };
@@ -143,10 +172,39 @@ export const dashboardAPI = {
     getSummary: <T>(vehicleId: number | string) => fetchAPI<T>(`/dashboard/${vehicleId}`),
 };
 
+async function fetchAuthAPI<T>(endpoint: string, body: unknown): Promise<T> {
+    const url = `${ROOT_URL}${endpoint}`;
+    const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+    });
+    const contentType = response.headers.get("content-type");
+    const data = contentType?.includes("application/json") ? ((await response.json()) as unknown) : null;
+
+    if (!response.ok) {
+        throw new Error(getErrorMessage(data));
+    }
+
+    if (isWrappedResponse<T>(data)) {
+        return data.data;
+    }
+
+    return data as T;
+}
+
+export const authAPI = {
+    login: (email: string, password: string) =>
+        fetchAuthAPI<AuthResponse>("/auth/login", { email, password }),
+    register: (email: string, password: string, name: string) =>
+        fetchAuthAPI<AuthResponse>("/auth/register", { email, password, name }),
+};
+
 export default {
     vehicles: vehiclesAPI,
     fuel: fuelAPI,
     service: serviceAPI,
     expenses: expensesAPI,
     dashboard: dashboardAPI,
+    auth: authAPI,
 };

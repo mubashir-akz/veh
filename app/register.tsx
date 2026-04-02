@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { CarFront, Eye, EyeOff, Lock, Mail } from "lucide-react-native";
+import { CarFront, Eye, EyeOff, Lock, Mail, User } from "lucide-react-native";
 import { useState } from "react";
 import {
     ActivityIndicator,
@@ -17,27 +17,33 @@ import { theme } from "../constants/theme";
 import { useAuthStore } from "../context/auth-context";
 import { useVehicleStore } from "../context/vehicle-context";
 
-export default function LoginScreen() {
-    const { login } = useAuthStore();
+export default function RegisterScreen() {
+    const { register } = useAuthStore();
     const { refreshVehicles } = useVehicleStore();
 
+    const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
 
-    const handleLogin = async () => {
+    const handleRegister = async () => {
         if (loading) return;
 
+        const trimmedName = name.trim();
         const trimmedEmail = email.trim().toLowerCase();
 
+        if (!trimmedName) {
+            setError("Full name is required.");
+            return;
+        }
         if (!trimmedEmail) {
             setError("Email is required.");
             return;
         }
-        if (!password) {
-            setError("Password is required.");
+        if (password.length < 6) {
+            setError("Password must be at least 6 characters.");
             return;
         }
 
@@ -45,11 +51,11 @@ export default function LoginScreen() {
         setLoading(true);
 
         try {
-            await login(trimmedEmail, password);
+            await register(trimmedEmail, password, trimmedName);
             await refreshVehicles();
             router.replace("/(tabs)");
         } catch (e) {
-            setError(e instanceof Error ? e.message : "Login failed. Please try again.");
+            setError(e instanceof Error ? e.message : "Registration failed. Please try again.");
         } finally {
             setLoading(false);
         }
@@ -73,14 +79,28 @@ export default function LoginScreen() {
 
                     {/* Form card */}
                     <View style={styles.card}>
-                        <Text style={styles.cardTitle}>Welcome back</Text>
-                        <Text style={styles.cardSubtitle}>Sign in to your account</Text>
+                        <Text style={styles.cardTitle}>Create account</Text>
+                        <Text style={styles.cardSubtitle}>Start managing your vehicles today</Text>
 
                         {error ? (
                             <View style={styles.errorBanner}>
                                 <Text style={styles.errorText}>{error}</Text>
                             </View>
                         ) : null}
+
+                        <Text style={styles.label}>Full Name</Text>
+                        <View style={styles.inputWrap}>
+                            <User color={theme.textMuted} size={18} />
+                            <TextInput
+                                value={name}
+                                onChangeText={setName}
+                                placeholder="John Doe"
+                                placeholderTextColor={theme.placeholder}
+                                autoCapitalize="words"
+                                autoComplete="name"
+                                style={styles.input}
+                            />
+                        </View>
 
                         <Text style={styles.label}>Email</Text>
                         <View style={styles.inputWrap}>
@@ -103,10 +123,10 @@ export default function LoginScreen() {
                             <TextInput
                                 value={password}
                                 onChangeText={setPassword}
-                                placeholder="••••••"
+                                placeholder="Min. 6 characters"
                                 placeholderTextColor={theme.placeholder}
                                 secureTextEntry={!showPassword}
-                                autoComplete="current-password"
+                                autoComplete="new-password"
                                 style={[styles.input, styles.passwordInput]}
                             />
                             <Pressable onPress={() => setShowPassword((v) => !v)} hitSlop={8}>
@@ -120,18 +140,18 @@ export default function LoginScreen() {
 
                         <Pressable
                             style={[styles.primaryBtn, loading && styles.primaryBtnDisabled]}
-                            onPress={() => void handleLogin()}
+                            onPress={() => void handleRegister()}
                             disabled={loading}>
                             {loading ? <ActivityIndicator color={theme.primaryText} size="small" /> : null}
-                            <Text style={styles.primaryBtnText}>{loading ? "Signing in…" : "Sign In"}</Text>
+                            <Text style={styles.primaryBtnText}>{loading ? "Creating account…" : "Create Account"}</Text>
                         </Pressable>
                     </View>
 
                     {/* Footer */}
                     <View style={styles.footer}>
-                        <Text style={styles.footerText}>Don&apos;t have an account? </Text>
-                        <Pressable onPress={() => router.push("/register")}>
-                            <Text style={styles.footerLink}>Create account</Text>
+                        <Text style={styles.footerText}>Already have an account? </Text>
+                        <Pressable onPress={() => router.push("/login")}>
+                            <Text style={styles.footerLink}>Sign in</Text>
                         </Pressable>
                     </View>
                 </ScrollView>

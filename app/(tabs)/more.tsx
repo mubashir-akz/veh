@@ -5,14 +5,15 @@ import {
     Fuel,
     HandCoins,
     Info,
-    LogIn,
+    LogOut,
     Settings,
     Wrench,
     type LucideIcon,
 } from "lucide-react-native";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { TabScreen } from "../../components/ui/tab-screen";
 import { theme } from "../../constants/theme";
+import { useAuthStore } from "../../context/auth-context";
 import { useTabBarSpacing } from "../../hooks/use-tab-bar-spacing";
 
 type MenuItem = {
@@ -25,7 +26,22 @@ type MenuItem = {
 };
 
 export default function MoreScreen() {
+    const { user, logout } = useAuthStore();
     const tabBarSpacing = useTabBarSpacing(0);
+
+    const handleLogout = () => {
+        Alert.alert("Sign Out", "Are you sure you want to sign out?", [
+            { text: "Cancel", style: "cancel" },
+            {
+                text: "Sign Out",
+                style: "destructive",
+                onPress: async () => {
+                    await logout();
+                    router.replace("/login");
+                },
+            },
+        ]);
+    };
 
     const features: MenuItem[] = [
         {
@@ -64,12 +80,12 @@ export default function MoreScreen() {
 
     const account: MenuItem[] = [
         {
-            key: "login",
-            title: "Login",
-            subtitle: "Sign in to your account",
-            iconBg: "#2F7AF8",
-            icon: LogIn,
-            onPress: () => router.push("/login"),
+            key: "logout",
+            title: "Sign Out",
+            subtitle: user ? user.email : "Not signed in",
+            iconBg: "#DC2626",
+            icon: LogOut,
+            onPress: handleLogout,
         },
         {
             key: "settings",
