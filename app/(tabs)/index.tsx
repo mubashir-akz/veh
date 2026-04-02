@@ -4,6 +4,7 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { G, Rect, Svg, Text as SvgText } from 'react-native-svg';
 import { TabScreen } from '../../components/ui/tab-screen';
 import { theme } from '../../constants/theme';
+import { useTabBarSpacing } from '../../hooks/use-tab-bar-spacing';
 
 const MONTHS = ['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'];
 const SPENDING_DATA = {
@@ -86,6 +87,7 @@ function SpendingChart({ filter }: { filter: Filter }) {
 export default function DashboardScreen() {
   const [filter, setFilter] = useState<Filter>('all');
   const totals = getTotals();
+  const tabBarSpacing = useTabBarSpacing(0);
 
   const FILTERS: { key: Filter; label: string }[] = [
     { key: 'all',     label: 'All'     },
@@ -96,7 +98,10 @@ export default function DashboardScreen() {
 
   return (
     <TabScreen style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={[styles.scroll, { flexGrow: 1, paddingBottom: tabBarSpacing }]}
+        showsVerticalScrollIndicator={false}>
         <Text style={styles.title}>Fleet Flow</Text>
         <Text style={styles.subtitle}>Track your vehicles and expenses</Text>
 
@@ -172,6 +177,7 @@ function Card({ icon, title, value }: CardProps) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.background },
+  scrollView: { flex: 1, backgroundColor: theme.background },
   scroll: { padding: 20, paddingBottom: 12 },
   title: { fontSize: 28, fontWeight: '700', color: theme.textPrimary },
   subtitle: { color: theme.textMuted, marginBottom: 20 },
