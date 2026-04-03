@@ -170,6 +170,8 @@ export const expensesAPI = {
 
 export const dashboardAPI = {
     getSummary: <T>(vehicleId: number | string) => fetchAPI<T>(`/dashboard/${vehicleId}`),
+    getTrend: <T>(vehicleId: number | string, months?: number) =>
+        fetchAPI<T>(`/dashboard/${vehicleId}/trend?months=${months ?? 6}`),
 };
 
 async function fetchAuthAPI<T>(endpoint: string, body: unknown): Promise<T> {
