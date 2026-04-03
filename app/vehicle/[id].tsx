@@ -38,16 +38,16 @@ export default function VehicleDetailScreen() {
         if (filter === 'fuel')    return dashboardTrend.fuel;
         if (filter === 'service') return dashboardTrend.service;
         if (filter === 'other')   return dashboardTrend.other;
-        return dashboardTrend.months.map((_, i) =>
+        return dashboardTrend.months.map((_: string, i: number) =>
             dashboardTrend.fuel[i] + dashboardTrend.service[i] + dashboardTrend.other[i]
         );
     }
 
     function getTotals() {
         if (!dashboardTrend) return { fuel: 0, service: 0, other: 0, total: 0 };
-        const fuel    = dashboardTrend.fuel.reduce((a, b) => a + b, 0);
-        const service = dashboardTrend.service.reduce((a, b) => a + b, 0);
-        const other   = dashboardTrend.other.reduce((a, b) => a + b, 0);
+        const fuel    = dashboardTrend.fuel.reduce((a: number, b: number) => a + b, 0);
+        const service = dashboardTrend.service.reduce((a: number, b: number) => a + b, 0);
+        const other   = dashboardTrend.other.reduce((a: number, b: number) => a + b, 0);
         return { fuel, service, other, total: fuel + service + other };
     }
 
@@ -71,7 +71,7 @@ export default function VehicleDetailScreen() {
 
         return (
             <Svg width="100%" height={totalH} viewBox={`0 0 ${W} ${totalH}`}>
-                {months.map((month, i) => {
+                {months.map((month: string, i: number) => {
                     const barH   = data[i] > 0 ? Math.max((data[i] / maxVal) * barMaxH, 4) : 0;
                     const x       = gap + i * (barW + gap);
                     const barTop  = 20 + barMaxH - barH;

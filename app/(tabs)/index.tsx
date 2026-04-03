@@ -92,9 +92,9 @@ export default function DashboardScreen() {
 
   const getTotals = () => {
     if (!dashboardTrend) return { fuel: 0, service: 0, other: 0, total: 0 };
-    const fuel    = dashboardTrend.fuel.reduce((a, b) => a + b, 0);
-    const service = dashboardTrend.service.reduce((a, b) => a + b, 0);
-    const other   = dashboardTrend.other.reduce((a, b) => a + b, 0);
+    const fuel    = dashboardTrend.fuel.reduce((a: number, b: number) => a + b, 0);
+    const service = dashboardTrend.service.reduce((a: number, b: number) => a + b, 0);
+    const other   = dashboardTrend.other.reduce((a: number, b: number) => a + b, 0);
     return { fuel, service, other, total: fuel + service + other };
   };
   const totals = getTotals();
