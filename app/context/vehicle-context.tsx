@@ -63,6 +63,13 @@ export type DashboardData = {
   lastService: ServiceRecord | null;
 };
 
+export type DashboardTrend = {
+  months: string[];
+  fuel: number[];
+  service: number[];
+  other: number[];
+};
+
 // ==================== CONTEXT ====================
 
 type VehicleContextValue = {
@@ -103,6 +110,8 @@ type VehicleContextValue = {
   // Dashboard
   dashboardData: DashboardData | null;
   loadDashboard: (vehicleId: number) => Promise<void>;
+  dashboardTrend: DashboardTrend | null;
+  loadDashboardTrend: (vehicleId: number, months?: number) => Promise<void>;
 };
 
 const VehicleContext = createContext<VehicleContextValue | undefined>(undefined);
@@ -126,6 +135,7 @@ export function VehicleProvider({ children }: VehicleProviderProps) {
   const [serviceRecords, setServiceRecords] = useState<ServiceRecord[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [dashboardTrend, setDashboardTrend] = useState<DashboardTrend | null>(null);
 
   // ==================== VEHICLE ACTIONS ====================
 
@@ -180,6 +190,7 @@ export function VehicleProvider({ children }: VehicleProviderProps) {
     setServiceRecords([]);
     setExpenses([]);
     setDashboardData(null);
+    setDashboardTrend(null);
   }, []);
 
   // ==================== FUEL LOG ACTIONS ====================
@@ -260,6 +271,16 @@ export function VehicleProvider({ children }: VehicleProviderProps) {
     }
   }, []);
 
+  const loadDashboardTrend = useCallback(async (vehicleId: number, months = 6) => {
+    try {
+      const response = await dashboardAPI.getTrend(vehicleId, months);
+      setDashboardTrend(response.data);
+    } catch (err: any) {
+      console.error('Failed to load dashboard trend:', err);
+      setDashboardTrend(null);
+    }
+  }, []);
+
   // Load vehicles on mount
   useEffect(() => {
     refreshVehicles();
@@ -304,6 +325,8 @@ export function VehicleProvider({ children }: VehicleProviderProps) {
       // Dashboard
       dashboardData,
       loadDashboard,
+      dashboardTrend,
+      loadDashboardTrend,
     }),
     [
       vehicles,
@@ -315,6 +338,7 @@ export function VehicleProvider({ children }: VehicleProviderProps) {
       serviceRecords,
       expenses,
       dashboardData,
+      dashboardTrend,
       refreshVehicles,
       addVehicle,
       updateVehicle,
@@ -330,6 +354,7 @@ export function VehicleProvider({ children }: VehicleProviderProps) {
       addExpense,
       deleteExpense,
       loadDashboard,
+      loadDashboardTrend,
     ]
   );
 

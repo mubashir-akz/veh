@@ -1,15 +1,26 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { ArrowLeft, CarFront, Fuel, TrendingUp, Wrench } from "lucide-react-native";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { G, Rect, Svg, Text as SvgText } from "react-native-svg";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { theme } from "../../constants/theme";
 import { useVehicleStore } from "../../context/vehicle-context";
 
+type Filter = 'all' | 'fuel' | 'service' | 'other';
+
+const FILTER_COLORS: Record<Filter, string> = {
+    all:     '#60A5FA',
+    fuel:    '#F97316',
+    service: '#A78BFA',
+    other:   '#34D399',
+};
+
 export default function VehicleDetailScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
-    const { vehicles, dashboardData, fuelLogs, serviceRecords, loadDashboard, loadFuelLogs, loadServiceRecords } = useVehicleStore();
+    const { vehicles, dashboardData, dashboardTrend, fuelLogs, serviceRecords, loadDashboard, loadDashboardTrend, loadFuelLogs, loadServiceRecords } = useVehicleStore();
     const vehicle = vehicles.find((v) => v.id === id);
+    const [filter, setFilter] = useState<Filter>('all');
 
     useEffect(() => {
         if (!id) {
@@ -17,9 +28,77 @@ export default function VehicleDetailScreen() {
         }
 
         void loadDashboard(id);
+        void loadDashboardTrend(id, 6);
         void loadFuelLogs(id);
         void loadServiceRecords(id);
-    }, [id, loadDashboard, loadFuelLogs, loadServiceRecords]);
+    }, [id, loadDashboard, loadDashboardTrend, loadFuelLogs, loadServiceRecords]);
+
+    function getChartData(filter: Filter): number[] {
+        if (!dashboardTrend) return [];
+        if (filter === 'fuel')    return dashboardTrend.fuel;
+        if (filter === 'service') return dashboardTrend.service;
+        if (filter === 'other')   return dashboardTrend.other;
+        return dashboardTrend.months.map((_, i) =>
+            dashboardTrend.fuel[i] + dashboardTrend.service[i] + dashboardTrend.other[i]
+        );
+    }
+
+    function getTotals() {
+        if (!dashboardTrend) return { fuel: 0, service: 0, other: 0, total: 0 };
+        const fuel    = dashboardTrend.fuel.reduce((a, b) => a + b, 0);
+        const service = dashboardTrend.service.reduce((a, b) => a + b, 0);
+        const other   = dashboardTrend.other.reduce((a, b) => a + b, 0);
+        return { fuel, service, other, total: fuel + service + other };
+    }
+
+    function SpendingChart({ trendFilter }: { trendFilter: Filter }) {
+        const data   = getChartData(trendFilter);
+        const months = dashboardTrend?.months ?? [];
+        if (data.length === 0 || months.length === 0) {
+            return (
+                <View style={styles.emptyChart}>
+                    <Text style={styles.emptyChartText}>No spending data yet</Text>
+                </View>
+            );
+        }
+        const maxVal  = Math.max(...data, 1);
+        const W       = 300;
+        const barMaxH = 80;
+        const barW    = 30;
+        const totalH  = 130;
+        const gap     = (W - barW * months.length) / (months.length + 1);
+        const color   = FILTER_COLORS[trendFilter];
+
+        return (
+            <Svg width="100%" height={totalH} viewBox={`0 0 ${W} ${totalH}`}>
+                {months.map((month, i) => {
+                    const barH   = data[i] > 0 ? Math.max((data[i] / maxVal) * barMaxH, 4) : 0;
+                    const x       = gap + i * (barW + gap);
+                    const barTop  = 20 + barMaxH - barH;
+                    const label   = data[i] > 0 ? (data[i] >= 1000 ? '$' + (data[i] / 1000).toFixed(1) + 'k' : '$' + data[i]) : '';
+                    return (
+                        <G key={month}>
+                            {label ? (
+                                <SvgText
+                                    x={x + barW / 2}
+                                    y={barTop - 4}
+                                    textAnchor="middle"
+                                    fontSize={9}
+                                    fontWeight="600"
+                                    fill={color}>
+                                    {label}
+                                </SvgText>
+                            ) : null}
+                            <Rect x={x} y={barTop} width={barW} height={barH || 0.01} rx={5} fill={color} opacity={0.85} />
+                            <SvgText x={x + barW / 2} y={totalH - 2} textAnchor="middle" fontSize={10} fill="#94A3B8">
+                                {month}
+                            </SvgText>
+                        </G>
+                    );
+                })}
+            </Svg>
+        );
+    }
 
     const vehicleHeading = vehicle
         ? vehicle.year > 0
@@ -148,6 +227,60 @@ export default function VehicleDetailScreen() {
                     </View>
                 </View>
 
+                {/* Monthly Spending Chart */}
+                <View style={styles.card}>
+                    <Text style={styles.cardTitle}>Monthly Spending</Text>
+
+                    <View style={styles.filterRow}>
+                        {(['all', 'fuel', 'service', 'other'] as Filter[]).map((f) => (
+                            <Pressable
+                                key={f}
+                                onPress={() => setFilter(f)}
+                                style={[
+                                    styles.filterBtn,
+                                    filter === f && {
+                                        backgroundColor: FILTER_COLORS[f] + '28',
+                                        borderColor: FILTER_COLORS[f],
+                                    },
+                                ]}>
+                                <Text style={[styles.filterText, filter === f && { color: FILTER_COLORS[f] }]}>
+                                    {f.charAt(0).toUpperCase() + f.slice(1)}
+                                </Text>
+                            </Pressable>
+                        ))}
+                    </View>
+
+                    <SpendingChart trendFilter={filter} />
+
+                    {dashboardTrend && (
+                        <>
+                            <View style={styles.separator} />
+                            {getTotals().fuel > 0 && (
+                                <View style={styles.breakdownRow}>
+                                    <Text style={styles.breakdownLabel}>Fuel</Text>
+                                    <Text style={[styles.breakdownValue, { color: FILTER_COLORS.fuel }]}>${getTotals().fuel.toFixed(2)}</Text>
+                                </View>
+                            )}
+                            {getTotals().service > 0 && (
+                                <View style={styles.breakdownRow}>
+                                    <Text style={styles.breakdownLabel}>Service</Text>
+                                    <Text style={[styles.breakdownValue, { color: FILTER_COLORS.service }]}>${getTotals().service.toFixed(2)}</Text>
+                                </View>
+                            )}
+                            {getTotals().other > 0 && (
+                                <View style={styles.breakdownRow}>
+                                    <Text style={styles.breakdownLabel}>Other</Text>
+                                    <Text style={[styles.breakdownValue, { color: FILTER_COLORS.other }]}>${getTotals().other.toFixed(2)}</Text>
+                                </View>
+                            )}
+                            <View style={[styles.breakdownRow, { paddingBottom: 0 }]}>
+                                <Text style={styles.totalLabel}>Total</Text>
+                                <Text style={styles.totalValue}>${getTotals().total.toFixed(2)}</Text>
+                            </View>
+                        </>
+                    )}
+                </View>
+
                 {/* Empty state */}
                 <View style={styles.card}>
                     <View style={styles.empty}>
@@ -242,4 +375,9 @@ const styles = StyleSheet.create({
     emptySubtitle: { color: theme.textMuted, fontSize: 13, marginTop: 6, textAlign: "center" },
     notFound: { flex: 1, alignItems: "center", justifyContent: "center", gap: 12 },
     notFoundText: { color: theme.textMuted, fontSize: 16 },
+    filterRow: { flexDirection: "row", gap: 8, marginBottom: 16 },
+    filterBtn: { flex: 1, paddingVertical: 6, borderRadius: 8, borderWidth: 1, borderColor: theme.borderSoft, alignItems: "center" },
+    filterText: { color: theme.textMuted, fontSize: 11, fontWeight: "600" },
+    emptyChart: { height: 130, alignItems: "center", justifyContent: "center" },
+    emptyChartText: { color: theme.textMuted, fontSize: 13 },
 });

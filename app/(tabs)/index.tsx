@@ -1,17 +1,11 @@
 import { Bell, Car } from 'lucide-react-native';
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { G, Rect, Svg, Text as SvgText } from 'react-native-svg';
 import { TabScreen } from '../../components/ui/tab-screen';
 import { theme } from '../../constants/theme';
 import { useTabBarSpacing } from '../../hooks/use-tab-bar-spacing';
-
-const MONTHS = ['Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'];
-const SPENDING_DATA = {
-  fuel:    [120, 95,  140, 110, 130, 105],
-  service: [0,   200, 0,   80,  0,   150],
-  other:   [30,  20,  55,  40,  25,  60],
-};
+import { useVehicleStore } from '../../context/vehicle-context';
 
 type Filter = 'all' | 'fuel' | 'service' | 'other';
 
@@ -22,40 +16,40 @@ const FILTER_COLORS: Record<Filter, string> = {
   other:   '#34D399',
 };
 
-function getChartData(filter: Filter): number[] {
-  if (filter === 'fuel')    return SPENDING_DATA.fuel;
-  if (filter === 'service') return SPENDING_DATA.service;
-  if (filter === 'other')   return SPENDING_DATA.other;
-  return MONTHS.map((_, i) =>
-    SPENDING_DATA.fuel[i] + SPENDING_DATA.service[i] + SPENDING_DATA.other[i]
-  );
-}
-
-function getTotals() {
-  const fuel    = SPENDING_DATA.fuel.reduce((a, b) => a + b, 0);
-  const service = SPENDING_DATA.service.reduce((a, b) => a + b, 0);
-  const other   = SPENDING_DATA.other.reduce((a, b) => a + b, 0);
-  return { fuel, service, other, total: fuel + service + other };
-}
-
 function formatLabel(val: number): string {
   if (val <= 0) return '';
   return val >= 1000 ? '$' + (val / 1000).toFixed(1) + 'k' : '$' + val;
 }
 
-function SpendingChart({ filter }: { filter: Filter }) {
-  const data   = getChartData(filter);
+function SpendingChart({ filter, trend }: { filter: Filter; trend: { months: string[]; fuel: number[]; service: number[]; other: number[] } | null }) {
+  const months = trend?.months ?? [];
+  const getData = () => {
+    if (!trend) return [];
+    if (filter === 'fuel')    return trend.fuel;
+    if (filter === 'service') return trend.service;
+    if (filter === 'other')   return trend.other;
+    return months.map((_, i) => trend.fuel[i] + trend.service[i] + trend.other[i]);
+  };
+  const data   = getData();
   const maxVal = Math.max(...data, 1);
   const W      = 320;
   const barMaxH = 90;
   const barW   = 34;
   const totalH = 148;
-  const gap    = (W - barW * MONTHS.length) / (MONTHS.length + 1);
+  const gap    = (W - barW * months.length) / (months.length + 1);
   const color  = FILTER_COLORS[filter];
+
+  if (!trend || months.length === 0) {
+    return (
+      <View style={{ height: 148, alignItems: 'center', justifyContent: 'center' }}>
+        <Text style={{ color: theme.textMuted, fontSize: 13 }}>No spending data yet</Text>
+      </View>
+    );
+  }
 
   return (
     <Svg width="100%" height={totalH} viewBox={`0 0 ${W} ${totalH}`}>
-      {MONTHS.map((month, i) => {
+      {months.map((month, i) => {
         const barH   = data[i] > 0 ? Math.max((data[i] / maxVal) * barMaxH, 4) : 0;
         const x      = gap + i * (barW + gap);
         const barTop = 28 + barMaxH - barH;
@@ -86,8 +80,24 @@ function SpendingChart({ filter }: { filter: Filter }) {
 
 export default function DashboardScreen() {
   const [filter, setFilter] = useState<Filter>('all');
-  const totals = getTotals();
+  const { vehicles, dashboardTrend, loadDashboardTrend } = useVehicleStore();
   const tabBarSpacing = useTabBarSpacing(0);
+
+  // Load trend for first vehicle
+  useEffect(() => {
+    if (vehicles.length > 0) {
+      void loadDashboardTrend(vehicles[0].id, 6);
+    }
+  }, [vehicles, loadDashboardTrend]);
+
+  const getTotals = () => {
+    if (!dashboardTrend) return { fuel: 0, service: 0, other: 0, total: 0 };
+    const fuel    = dashboardTrend.fuel.reduce((a, b) => a + b, 0);
+    const service = dashboardTrend.service.reduce((a, b) => a + b, 0);
+    const other   = dashboardTrend.other.reduce((a, b) => a + b, 0);
+    return { fuel, service, other, total: fuel + service + other };
+  };
+  const totals = getTotals();
 
   const FILTERS: { key: Filter; label: string }[] = [
     { key: 'all',     label: 'All'     },
@@ -106,7 +116,7 @@ export default function DashboardScreen() {
         <Text style={styles.subtitle}>Track your vehicles and expenses</Text>
 
         <View style={styles.row}>
-          <Card icon={<Car color="#60A5FA" />} title="Vehicles" value="0" />
+          <Card icon={<Car color="#60A5FA" />} title="Vehicles" value={vehicles.length.toString()} />
           <Card icon={<Bell color="#FACC15" />} title="Reminders" value="0" />
         </View>
 
@@ -132,7 +142,7 @@ export default function DashboardScreen() {
             ))}
           </View>
 
-          <SpendingChart filter={filter} />
+          <SpendingChart filter={filter} trend={dashboardTrend} />
 
           <View style={styles.spendingRow}>
             <Text style={styles.spendingLabel}>Fuel</Text>
@@ -152,11 +162,13 @@ export default function DashboardScreen() {
           </View>
         </View>
 
-        <View style={styles.emptyCard}>
-          <Car size={40} color="#94A3B8" />
-          <Text style={styles.emptyText}>No vehicles added yet</Text>
-          <Text style={styles.emptySub}>Tap the + button to add your first vehicle</Text>
-        </View>
+        {vehicles.length === 0 && (
+          <View style={styles.emptyCard}>
+            <Car size={40} color="#94A3B8" />
+            <Text style={styles.emptyText}>No vehicles added yet</Text>
+            <Text style={styles.emptySub}>Tap the + button to add your first vehicle</Text>
+          </View>
+        )}
       </ScrollView>
     </TabScreen>
   );
