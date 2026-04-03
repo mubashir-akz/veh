@@ -108,6 +108,13 @@ export type DashboardData = {
   lastService: ServiceRecord | null;
 };
 
+export type DashboardTrend = {
+  months: string[];
+  fuel: number[];
+  service: number[];
+  other: number[];
+};
+
 type FuelLogResponse = {
   id: number;
   vehicleId: number;
@@ -155,6 +162,13 @@ type DashboardResponse = {
   lastService?: ServiceRecordResponse | null;
 };
 
+type DashboardTrendResponse = {
+  months?: string[];
+  fuel?: number[];
+  service?: number[];
+  other?: number[];
+};
+
 type VehicleContextValue = {
   vehicles: Vehicle[];
   loading: boolean;
@@ -163,6 +177,7 @@ type VehicleContextValue = {
   serviceRecords: ServiceRecord[];
   expenses: Expense[];
   dashboardData: DashboardData | null;
+  dashboardTrend: DashboardTrend | null;
   refreshVehicles: () => Promise<void>;
   addVehicle: (vehicle: CreateVehicleInput) => Promise<Vehicle>;
   loadFuelLogs: (vehicleId: string) => Promise<void>;
@@ -175,6 +190,7 @@ type VehicleContextValue = {
   addExpense: (vehicleId: string, expenseData: AddExpenseInput) => Promise<void>;
   deleteExpense: (id: string) => Promise<void>;
   loadDashboard: (vehicleId: string) => Promise<void>;
+  loadDashboardTrend: (vehicleId: string, months?: number) => Promise<void>;
 };
 
 const VehicleContext = createContext<VehicleContextValue | undefined>(undefined);
@@ -253,6 +269,15 @@ function normalizeDashboard(data: DashboardResponse): DashboardData {
   };
 }
 
+function normalizeDashboardTrend(data: DashboardTrendResponse): DashboardTrend {
+  return {
+    months: data.months ?? [],
+    fuel: data.fuel ?? [],
+    service: data.service ?? [],
+    other: data.other ?? [],
+  };
+}
+
 function getErrorMessage(error: unknown) {
   if (error instanceof Error) {
     return error.message;
@@ -269,6 +294,7 @@ export function VehicleProvider({ children }: VehicleProviderProps) {
   const [serviceRecords, setServiceRecords] = useState<ServiceRecord[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [dashboardTrend, setDashboardTrend] = useState<DashboardTrend | null>(null);
 
   const refreshVehicles = useCallback(async () => {
     if (!hasAuthToken()) {
@@ -277,6 +303,7 @@ export function VehicleProvider({ children }: VehicleProviderProps) {
       setServiceRecords([]);
       setExpenses([]);
       setDashboardData(null);
+      setDashboardTrend(null);
       setLoading(false);
       return;
     }
@@ -401,6 +428,22 @@ export function VehicleProvider({ children }: VehicleProviderProps) {
     }
   }, []);
 
+  const loadDashboardTrend = useCallback(async (vehicleId: string, months = 6) => {
+    if (!hasAuthToken() || !vehicleId) {
+      setDashboardTrend(null);
+      return;
+    }
+
+    try {
+      const data = await dashboardAPI.getTrend<DashboardTrendResponse>(vehicleId, months);
+      setDashboardTrend(normalizeDashboardTrend(data));
+      setError(null);
+    } catch (requestError) {
+      setError(getErrorMessage(requestError));
+      setDashboardTrend(null);
+    }
+  }, []);
+
   useEffect(() => {
     void refreshVehicles();
   }, [refreshVehicles]);
@@ -414,6 +457,7 @@ export function VehicleProvider({ children }: VehicleProviderProps) {
       serviceRecords,
       expenses,
       dashboardData,
+      dashboardTrend,
       refreshVehicles,
       addVehicle,
       loadFuelLogs,
@@ -426,6 +470,7 @@ export function VehicleProvider({ children }: VehicleProviderProps) {
       addExpense,
       deleteExpense,
       loadDashboard,
+      loadDashboardTrend,
     }),
     [
       addExpense,
@@ -433,6 +478,7 @@ export function VehicleProvider({ children }: VehicleProviderProps) {
       addServiceRecord,
       addVehicle,
       dashboardData,
+      dashboardTrend,
       deleteExpense,
       deleteFuelLog,
       deleteServiceRecord,
@@ -440,6 +486,7 @@ export function VehicleProvider({ children }: VehicleProviderProps) {
       expenses,
       fuelLogs,
       loadDashboard,
+      loadDashboardTrend,
       loadExpenses,
       loadFuelLogs,
       loadServiceRecords,
