@@ -1,5 +1,4 @@
 import { Stack, useRouter, useSegments } from "expo-router";
-import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -28,30 +27,51 @@ function AppContent() {
 
   if (isLoading) {
     return (
-      <View style={{ flex: 1, backgroundColor: theme.background, alignItems: "center", justifyContent: "center" }}>
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: theme.background,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
         <ActivityIndicator color={theme.primary} size="large" />
       </View>
     );
   }
 
   return (
-    <VehicleProvider>
-      <StatusBar style="light" backgroundColor="#0F172A" translucent={false} />
-      <View style={{ flex: 1, backgroundColor: theme.background }}>
-        <AuthGate />
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            animation: "fade",
-            contentStyle: { backgroundColor: theme.background },
-          }}>
-          <Stack.Screen name="(tabs)" options={{ contentStyle: { backgroundColor: theme.background } }} />
-          <Stack.Screen name="vehicle/[id]" options={{ contentStyle: { backgroundColor: theme.background } }} />
-          <Stack.Screen name="login" options={{ contentStyle: { backgroundColor: theme.background } }} />
-          <Stack.Screen name="register" options={{ contentStyle: { backgroundColor: theme.background } }} />
-        </Stack>
-      </View>
-    </VehicleProvider>
+    <SafeAreaProvider>
+      <VehicleProvider>
+        <View style={{ flex: 1, backgroundColor: theme.background }}>
+          <AuthGate />
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              animation: "fade",
+              contentStyle: { backgroundColor: theme.background },
+            }}
+          >
+            <Stack.Screen
+              name="(tabs)"
+              options={{ contentStyle: { backgroundColor: theme.background } }}
+            />
+            <Stack.Screen
+              name="vehicle/[id]"
+              options={{ contentStyle: { backgroundColor: theme.background } }}
+            />
+            <Stack.Screen
+              name="login"
+              options={{ contentStyle: { backgroundColor: theme.background } }}
+            />
+            <Stack.Screen
+              name="register"
+              options={{ contentStyle: { backgroundColor: theme.background } }}
+            />
+          </Stack>
+        </View>
+      </VehicleProvider>
+    </SafeAreaProvider>
   );
 }
 

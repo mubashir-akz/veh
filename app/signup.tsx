@@ -1,61 +1,79 @@
 import { FontAwesome, Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import {
+    KeyboardAvoidingView,
+    Platform,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    View,
+} from 'react-native';
 import { theme } from '../constants/theme';
 
 export default function SignupScreen() {
     const [name, setName] = useState('');
     const [phone, setPhone] = useState('');
     return (
-        <View style={styles.container}>
-            <Text style={styles.title}>Get Started</Text>
-            <Text style={styles.subtitle}>Create your Fleet Flow account</Text>
+        <KeyboardAvoidingView
+            style={styles.container}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
+            <ScrollView
+                contentContainerStyle={styles.contentContainer}
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
+            >
+                <Text style={styles.title}>Get Started</Text>
+                <Text style={styles.subtitle}>Create your Fleet Flow account</Text>
 
-            <Text style={styles.label}>Full Name</Text>
-            <View style={styles.inputRow}>
-                <Ionicons name="person-outline" size={20} color={theme.textMuted} style={styles.inputIcon} />
-                <TextInput
-                    style={styles.input}
-                    placeholder="Enter your name"
-                    placeholderTextColor={theme.textMuted}
-                    value={name}
-                    onChangeText={setName}
-                />
-            </View>
+                <Text style={styles.label}>Full Name</Text>
+                <View style={styles.inputRow}>
+                    <Ionicons name="person-outline" size={20} color={theme.textMuted} style={styles.inputIcon} />
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Enter your name"
+                        placeholderTextColor={theme.textMuted}
+                        value={name}
+                        onChangeText={setName}
+                    />
+                </View>
 
-            <Text style={styles.label}>Phone Number</Text>
-            <View style={styles.inputRow}>
-                <Ionicons name="call-outline" size={20} color={theme.textMuted} style={styles.inputIcon} />
-                <TextInput
-                    style={styles.input}
-                    placeholder="Enter your phone number"
-                    placeholderTextColor={theme.textMuted}
-                    keyboardType="phone-pad"
-                    value={phone}
-                    onChangeText={setPhone}
-                />
-            </View>
+                <Text style={styles.label}>Phone Number</Text>
+                <View style={styles.inputRow}>
+                    <Ionicons name="call-outline" size={20} color={theme.textMuted} style={styles.inputIcon} />
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Enter your phone number"
+                        placeholderTextColor={theme.textMuted}
+                        keyboardType="phone-pad"
+                        value={phone}
+                        onChangeText={setPhone}
+                    />
+                </View>
 
-            <Pressable style={styles.button}>
-                <Text style={styles.buttonText}>Create Account</Text>
-            </Pressable>
+                <Pressable style={styles.button}>
+                    <Text style={styles.buttonText}>Create Account</Text>
+                </Pressable>
 
-            <View style={styles.orRow}>
-                <View style={styles.orLine} />
-                <Text style={styles.orText}>or</Text>
-                <View style={styles.orLine} />
-            </View>
+                <View style={styles.orRow}>
+                    <View style={styles.orLine} />
+                    <Text style={styles.orText}>or</Text>
+                    <View style={styles.orLine} />
+                </View>
 
-            <View style={styles.socialRow}>
-                <Pressable style={styles.socialBtn}><Ionicons name="logo-google" size={24} color={theme.textMuted} /></Pressable>
-                <Pressable style={styles.socialBtn}><FontAwesome name="facebook" size={24} color={theme.textMuted} /></Pressable>
-                <Pressable style={styles.socialBtn}><Ionicons name="logo-apple" size={24} color={theme.textMuted} /></Pressable>
-            </View>
+                <View style={styles.socialRow}>
+                    <Pressable style={styles.socialBtn}><Ionicons name="logo-google" size={24} color={theme.textMuted} /></Pressable>
+                    <Pressable style={styles.socialBtn}><FontAwesome name="facebook" size={24} color={theme.textMuted} /></Pressable>
+                    <Pressable style={styles.socialBtn}><Ionicons name="logo-apple" size={24} color={theme.textMuted} /></Pressable>
+                </View>
 
-            <Text style={styles.footerText}>
-                Already have an account? <Text style={styles.link}>Login</Text>
-            </Text>
-        </View>
+                <Text style={styles.footerText}>
+                    Already have an account? <Text style={styles.link}>Login</Text>
+                </Text>
+            </ScrollView>
+        </KeyboardAvoidingView>
     );
 }
 
@@ -63,6 +81,9 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#151E2E',
+    },
+    contentContainer: {
+        flexGrow: 1,
         alignItems: 'center',
         justifyContent: 'center',
         paddingHorizontal: 24,
